@@ -103,8 +103,8 @@ export default function Home() {
           <h1 className="text-2xl font-bold text-[#09090B] text-center mb-3">
             Fund your creative work
           </h1>
-          <p className="text-sm text-[#78350F] text-center leading-relaxed max-w-[240px]">
-            Accept support. Start a membership. Setup a shop. It's easier than
+          <p className="text-sm text-[#78350F] text-center leading-relaxed max-w-60">
+            Accept support. Start a membership. Setup a shop. Its easier than
             you think.
           </p>
         </div>
