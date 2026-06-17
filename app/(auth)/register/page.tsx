@@ -1,10 +1,18 @@
 "use client";
 import { TextField } from "@/app/components/TextField";
+import Link from "next/link";
 import { useState } from "react";
 
 export default function Home() {
+  const [step, setStep] = useState<"username" | "account" | "success">(
+    "username",
+  );
   const [username, setUsername] = useState("");
   const [usernameErr, setUsernameErr] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [emailErr, setEmailErr] = useState("");
+  const [passwordErr, setPasswordErr] = useState("");
 
   const isUsernameValid = (value: string) => {
     if (value === "") return "Username cannot be empty.";
@@ -13,9 +21,42 @@ export default function Home() {
     return "";
   };
 
-  const handleContinue = () => {
+  const isEmailValid = (value: string) => {
+    if (value === "") return "Email cannot be empty...";
+    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value))
+      return "Please enter a valid email address.";
+    return "";
+  };
+
+  const isPasswordValid = (value: string) => {
+    if (value === "") return "Password cannot be empty";
+    if (
+      !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(
+        value,
+      )
+    )
+      return "Min 8 chars, uppercase, lowercase, number, special character.";
+    return "";
+  };
+
+  const handleContinueUsername = () => {
     const err = isUsernameValid(username);
     setUsernameErr(err);
+    if (err === "") {
+      setStep("account");
+    }
+  };
+
+  const handleContinueAccount = () => {
+    const emailValidationErr = isEmailValid(email);
+    const passwordValidationErr = isPasswordValid(password);
+
+    setEmailErr(emailValidationErr);
+    setPasswordErr(passwordValidationErr);
+
+    if (emailValidationErr === "" && passwordValidationErr === "") {
+      setStep("success");
+    }
   };
 
   return (
@@ -112,44 +153,137 @@ export default function Home() {
 
       <div className="w-1/2 bg-white flex flex-col">
         <div className="flex justify-end px-6 py-5">
-          <button className="text-sm text-[#374151] border border-[#D1D5DB] rounded-md px-4 py-1.5 hover:bg-gray-50 transition-colors">
-            Log in
-          </button>
+          {step !== "success" && (
+            <button className="text-sm text-[#374151] border border-[#D1D5DB] rounded-md px-4 py-1.5 hover:bg-gray-50 hover:font-bold transition-all duration-200">
+              Log in
+            </button>
+          )}
         </div>
 
         <div className="flex-1 flex items-center justify-center px-8">
           <div className="w-full max-w-[320px]">
-            <h2 className="text-xl font-semibold text-[#111827] mb-1">
-              Create Your Account
-            </h2>
-            <p className="text-sm text-[#6B7280] mb-6">
-              Choose a username for your page
-            </p>
+            {step === "username" && (
+              <>
+                <h2 className="text-xl font-semibold text-[#111827] mb-1">
+                  Create Your Account
+                </h2>
+                <p className="text-sm text-[#6B7280] mb-6">
+                  Choose a username for your page
+                </p>
 
-            <div className="mb-3">
-              <label className="block text-sm font-medium text-black mb-1.5">
-                Username
-              </label>
-              <TextField
-                value={username}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setUsername(value);
-                  setUsernameErr(isUsernameValid(value));
-                }}
-                error={usernameErr !== ""}
-                helperText={usernameErr}
-                placeholder="Username"
-                type="text"
-              />
-            </div>
+                <div className="mb-3 text-black">
+                  <label className="block text-sm font-medium text-black mb-1.5">
+                    Username
+                  </label>
+                  <TextField
+                    value={username}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setUsername(value);
+                      setUsernameErr(isUsernameValid(value));
+                    }}
+                    error={usernameErr !== ""}
+                    helperText={usernameErr}
+                    placeholder="Username"
+                    type="text"
+                  />
+                </div>
 
-            <button
-              onClick={handleContinue}
-              className="w-full bg-[#E5E7EB] text-[#9CA3AF] text-sm font-medium rounded-md py-2.5"
-            >
-              Continue
-            </button>
+                <button
+                  onClick={handleContinueUsername}
+                  className="w-full bg-[#E5E7EB] text-[#9CA3AF] text-sm font-medium rounded-md py-2.5 hover:font-bold transition-all duration-200"
+                >
+                  Continue
+                </button>
+              </>
+            )}
+
+            {step === "account" && (
+              <>
+                <h2 className="text-xl font-semibold text-[#111827] mb-1">
+                  Welcome, {username}
+                </h2>
+                <p className="text-sm text-[#6B7280] mb-6">
+                  Connect email and set a password
+                </p>
+
+                <div className="mb-3">
+                  <label className="block text-sm font-medium text-black mb-1.5">
+                    Email
+                  </label>
+                  <TextField
+                    value={email}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setEmail(value);
+                      setEmailErr(isEmailValid(value));
+                    }}
+                    error={emailErr !== ""}
+                    helperText={emailErr}
+                    placeholder="Enter email here"
+                    type="email"
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label className="block text-sm font-medium text-black mb-1.5">
+                    Password
+                  </label>
+                  <TextField
+                    value={password}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setPassword(value);
+                      setPasswordErr(isPasswordValid(value));
+                    }}
+                    error={passwordErr !== ""}
+                    helperText={passwordErr}
+                    placeholder="Enter password here"
+                    type="password"
+                  />
+                </div>
+
+                <button
+                  onClick={handleContinueAccount}
+                  className="w-full bg-[#E5E7EB] text-[#9CA3AF] text-sm font-medium rounded-md py-2.5 hover:font-bold transition-all duration-200"
+                >
+                  Continue
+                </button>
+              </>
+            )}
+
+            {step === "success" && (
+              <div className="flex flex-col items-center text-center">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#16A34A"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-[#111827] mb-2">
+                  Welcome!
+                </h2>
+                <p className="text-sm text-[#6B7280] mb-6">
+                  your username is <strong>{username}</strong> BITCH{" "}
+                </p>
+                <Link href="/login" className="w-full">
+                  <button
+                    onClick={() => alert("ARAI tsashn hiigegv bnaa sdamin")}
+                    className="w-full bg-[#FBBF24] text-[#09090B] text-sm font-semibold rounded-md py-2.5 hover:bg-[#F59E0B] hover:font-bold transition-all duration-200"
+                  >
+                    Continue
+                  </button>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
