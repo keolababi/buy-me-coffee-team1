@@ -23,7 +23,7 @@ export default function Home() {
           />
           <mask
             id="mask0_1_4178"
-            style="mask-type:alpha"
+            style={{ maskType: "alpha" }}
             maskUnits="userSpaceOnUse"
             x="234"
             y="287"

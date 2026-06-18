@@ -1,257 +1,292 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
+import { CoverImageUploader } from "../components/CoverImageUploader";
+import {
+  type ProfileDetails,
+  ProfileEditModal,
+} from "../components/ProfileEditModal";
 
-type Supporter = {
-  name: string;
-  amount: string;
-  coffees: number;
-  message: string;
-  avatarColor: string;
+const amounts = [1, 2, 5, 10];
+const initialProfile: ProfileDetails = {
+  name: "Jake",
+  about:
+    "I'm a typical person who enjoys exploring different things. I also make music art as a hobby. Follow me along.",
+  socialUrl: "https://buymeacoffee.com/spacerulz44",
+  avatarUrl: "/PFP.svg",
 };
 
-const supporters: Supporter[] = [
-  {
-    name: "Sarah Thompson",
-    amount: "$10",
-    coffees: 2,
-    message:
-      "Thank you for sharing your creative work. Your posts always make my day better!",
-    avatarColor: "bg-[#A3E635]",
-  },
-  {
-    name: "Michael Brown",
-    amount: "$5",
-    coffees: 1,
-    message: "Keep going. Excited to see what you create next.",
-    avatarColor: "bg-[#C084FC]",
-  },
-  {
-    name: "Alex Johnson",
-    amount: "$15",
-    coffees: 3,
-    message:
-      "Your work has helped me learn a lot. This coffee is a small thank you.",
-    avatarColor: "bg-[#22D3EE]",
-  },
-];
+type Supporter = {
+  id: number;
+  name: string;
+  amount: number;
+  message: string;
+};
+
+const getSupporterName = (url: string) => {
+  try {
+    const normalizedUrl = url.includes("://") ? url : `https://${url}`;
+    const parsedUrl = new URL(normalizedUrl);
+    const pathName = parsedUrl.pathname.split("/").filter(Boolean)[0];
+    const name = pathName || parsedUrl.hostname.split(".")[0];
+
+    return name
+      .replace(/[-_]/g, " ")
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  } catch {
+    return "Guest";
+  }
+};
 
 export default function DonationCreatorPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedAmount, setSelectedAmount] = useState(1);
-  const [name, setName] = useState("Jake");
-  const [about, setAbout] = useState(
-    "I'm a digital creator who enjoys sharing content, design, and ideas."
-  );
-  const [socialUrl, setSocialUrl] = useState("https://buymeacoffee.com/jake");
+  const [profile, setProfile] = useState(initialProfile);
+  const [selectedAmount, setSelectedAmount] = useState(5);
+  const [socialUrl, setSocialUrl] = useState("");
   const [message, setMessage] = useState("");
+  const [hasTouchedSocialUrl, setHasTouchedSocialUrl] = useState(false);
+  const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false);
+  const [supporters, setSupporters] = useState<Supporter[]>([]);
+  const canSupport = socialUrl.trim() !== "";
+  const hasSocialUrlError = hasTouchedSocialUrl && socialUrl.trim() === "";
+  const [showAllSupporters, setShowAllSupporters] = useState(false);
 
-  const hasSupporters = supporters.length > 0;
+  const handleSupport = () => {
+    if (!canSupport) {
+      setHasTouchedSocialUrl(true);
+      return;
+    }
 
+    setSupporters((currentSupporters) => [
+      {
+        id: Date.now(),
+        name: getSupporterName(socialUrl),
+        amount: selectedAmount,
+        message: message.trim(),
+        avatarURL: profile.avatarUrl,
+      },
+      ...currentSupporters,
+    ]);
+    setSocialUrl("");
+    setMessage("");
+    setHasTouchedSocialUrl(false);
+  };
+
+  const VisibleSupporters = showAllSupporters
+    ? supporters
+    : supporters.slice(0, 4);
   return (
-    <main className="min-h-screen bg-white text-[#09090B]">
-      <header className="h-14 border-b border-[#E4E4E7] bg-white">
+    <main className="min-h-screen bg-[#FAFAFA] text-[#09090B]">
+      <header className="h-16 border-b border-[#E4E4E7] bg-white">
         <div className="mx-auto flex h-full max-w-300 items-center justify-between px-6">
           <div className="flex items-center gap-2">
-            <div className="flex size-6 items-center justify-center rounded-full bg-[#14B8A6] text-xs font-bold text-white">
-              B
-            </div>
-            <span className="text-sm font-semibold">Buy Me Coffee</span>
+            <Image src="/coffee.svg" alt="Coffee logo" width={24} height={24} />
+            <p className="text-base font-semibold">Buy Me Coffee</p>
           </div>
-
-          <div className="flex items-center gap-2">
-            <div className="size-8 rounded-full bg-[url('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=120&auto=format&fit=crop')] bg-cover bg-center" />
-            <span className="text-sm font-medium">{name}</span>
+          
+          <div className="flex items-center gap-2 rounded-md px-3 py-2 ">
+            <Image
+              className="size-10 rounded-full"
+              src={profile.avatarUrl}
+              alt={`${profile.name} profile picture`}
+              width={40}
+              height={40}
+              unoptimized={profile.avatarUrl.startsWith("blob:")}
+            />
+            <span className="text-sm font-medium">{profile.name}</span>
+            <button className="inline-flex size-6 items-center justify-center rounded-xs hover:bg-[#E4E4E7]">
+              <Image
+                src="/chevron-down.svg"
+                alt=""
+                width={16}
+                height={16}
+                aria-hidden="true"
+              />
+            </button>
           </div>
         </div>
       </header>
 
-      <section className="relative h-55 bg-[#55C3A6]">
-        <button className="absolute right-6 top-4 rounded-md border border-[#E4E4E7] bg-white px-3 py-1.5 text-xs font-medium shadow-sm hover:bg-[#F4F4F5]">
-          Change cover
-        </button>
-      </section>
+      <CoverImageUploader />
 
-      <section className="relative mx-auto -mt-10 grid max-w-300 grid-cols-1 gap-6 px-6 pb-16 lg:grid-cols-[1fr_420px]">
+      <section className="relative z-10 mx-auto -mt-20 grid max-w-270 grid-cols-1 gap-6 px-6 pb-16 lg:grid-cols-[1fr_520px]">
         <div className="space-y-6">
           <section className="rounded-md border border-[#E4E4E7] bg-white p-6 shadow-sm">
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center justify-between gap-4 border-b border-[#E4E4E7] pb-6">
               <div className="flex items-center gap-3">
-                <div className="size-12 rounded-full bg-[url('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=120&auto=format&fit=crop')] bg-cover bg-center" />
-                <h1 className="text-base font-semibold">{name}</h1>
+                <Image
+                  className="size-12 rounded-full"
+                  src={profile.avatarUrl}
+                  alt={`${profile.name} profile picture`}
+                  width={48}
+                  height={48}
+                  unoptimized={profile.avatarUrl.startsWith("blob:")}
+                />
+                <p className="text-xl font-bold">{profile.name}</p>
               </div>
 
               <button
-                onClick={() => setIsModalOpen(true)}
-                className="rounded-md border border-[#E4E4E7] px-3 py-1.5 text-xs font-medium hover:bg-[#F4F4F5]"
+                type="button"
+                onClick={() => setIsProfileEditorOpen(true)}
+                className="rounded-md bg-[#F4F4F5] px-4 py-2 text-sm font-medium hover:bg-[#E4E4E7]"
               >
                 Edit page
               </button>
             </div>
 
-            <div className="mt-6 space-y-5">
-              <section>
-                <h2 className="text-sm font-semibold">About {name}</h2>
-                <p className="mt-2 text-xs leading-5 text-[#71717A]">
-                  {about}
-                </p>
-              </section>
-
-              <section>
-                <h2 className="text-sm font-semibold">Social media URL</h2>
-                <p className="mt-2 text-xs text-[#71717A]">{socialUrl}</p>
-              </section>
-            </div>
+            <section className="pt-6">
+              <h2 className="text-base font-semibold">About {profile.name}</h2>
+              <p className="mt-5 text-sm leading-5">{profile.about}</p>
+            </section>
           </section>
 
           <section className="rounded-md border border-[#E4E4E7] bg-white p-6 shadow-sm">
-            <h2 className="text-sm font-semibold">Recent supporters</h2>
+            <h2 className="text-base font-semibold">Social media URL</h2>
+            <p className="mt-5 text-sm">{profile.socialUrl}</p>
+          </section>
 
-            {!hasSupporters ? (
-              <div className="mt-3 flex h-30 flex-col items-center justify-center rounded-md border border-[#E4E4E7]">
-                <div className="text-lg">&#9829;</div>
-                <p className="mt-2 text-xs font-medium">
-                  Be the first one to support {name}
-                </p>
-              </div>
-            ) : (
-              <div className="mt-4 space-y-5">
-                {supporters.map((supporter) => (
-                  <article key={supporter.name} className="flex gap-3">
-                    <div
-                      className={`size-8 shrink-0 rounded-full ${supporter.avatarColor}`}
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-semibold">
-                          {supporter.name}
-                        </p>
-                        <p className="text-xs font-medium">
-                          {supporter.amount}
-                        </p>
-                      </div>
-                      <p className="text-xs text-[#71717A]">
-                        Bought {supporter.coffees}{" "}
-                        {supporter.coffees === 1 ? "coffee" : "coffees"}
+          <section className="rounded-md border border-[#E4E4E7] bg-white p-6 shadow-sm">
+            <h2 className="text-base font-semibold">Recent Supporters</h2>
+            {supporters.length > 0 ? (
+              <div className="mt-5 space-y-5">
+                {VisibleSupporters.map((supporter) => (
+                  <article key={supporter.id} className="flex gap-3">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F4F4F5] text-sm font-semibold">
+                      {supporter.name.charAt(0)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm leading-5">
+                        <span className="font-semibold">{supporter.name}</span>{" "}
+                        bought ${supporter.amount} coffee
                       </p>
-                      <p className="mt-1 text-xs leading-5 text-[#52525B]">
-                        {supporter.message}
-                      </p>
+                      {supporter.message && (
+                        <p className="mt-2 text-sm leading-5">
+                          {supporter.message}
+                        </p>
+                      )}
                     </div>
                   </article>
                 ))}
+
+                {supporters.length > 4 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllSupporters((current) => !current)}
+                    className="mt-5 h-10 w-full rounded-md border border-[#E4E4E7] text-sm font-medium hover:bg-[#F4F4F5]"
+                    >
+                      {showAllSupporters ? "See less" : "See more"}
+                    </button>
+                )}
+              </div>
+            ) : (
+              <div className="mt-5 flex min-h-36 flex-col items-center justify-center rounded-lg border border-[#E4E4E7] bg-white p-6 text-center">
+                <Image
+                  src="/heart.svg"
+                  alt=""
+                  width={24}
+                  height={24}
+                  aria-hidden="true"
+                />
+                <p className="mt-3 text-base font-semibold leading-6">
+                  Be the first one to support {profile.name}
+                </p>
               </div>
             )}
           </section>
         </div>
 
+      
         <aside className="h-fit rounded-md border border-[#E4E4E7] bg-white p-6 shadow-sm">
-          <h2 className="text-base font-semibold">Buy {name} a Coffee</h2>
+          <h1 className="text-2xl font-bold">Buy {profile.name} a Coffee</h1>
 
-          <div className="mt-4">
-            <p className="text-xs font-medium">Select amount:</p>
-
-            <div className="mt-2 flex items-center gap-2">
-              {[1, 2, 5].map((amount) => (
+          <div className="mt-6">
+            <p className="text-sm font-medium">Select amount:</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {amounts.map((amount) => (
                 <button
                   key={amount}
                   onClick={() => setSelectedAmount(amount)}
-                  className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
+                  className={`flex h-10 items-center gap-2 rounded-md border px-4 text-sm font-medium transition-colors ${
                     selectedAmount === amount
-                      ? "border-[#09090B] bg-[#09090B] text-white"
-                      : "border-[#E4E4E7] bg-white hover:bg-[#F4F4F5]"
+                      ? "border-[#18181B] bg-white"
+                      : "border-transparent bg-[#F4F4F5] hover:bg-[#E4E4E7]"
                   }`}
                 >
+                  <Image
+                    src="/coffee.svg"
+                    alt=""
+                    width={16}
+                    height={16}
+                    aria-hidden="true"
+                  />
                   ${amount}
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="mt-5">
-            <label className="text-xs font-medium">Special message</label>
-            <textarea
-              value={message}
-              onChange={(event) => setMessage(event.target.value)}
-              className="mt-2 h-24 w-full resize-none rounded-md border border-[#E4E4E7] p-3 text-sm outline-none transition-colors placeholder:text-[#A1A1AA] focus:border-[#09090B]"
-              placeholder="Write your message here..."
-            />
-          </div>
+          <label
+            htmlFor="socialUrl"
+            className="mt-6 block text-sm font-medium"
+          >
+            Enter BuyMeCoffee or social account URL:
+          </label>
+          <input
+            id="socialUrl"
+            value={socialUrl}
+            onChange={(event) => setSocialUrl(event.target.value)}
+            onBlur={() => setHasTouchedSocialUrl(true)}
+            aria-invalid={hasSocialUrlError}
+            aria-describedby={
+              hasSocialUrlError ? "socialUrl-error" : undefined
+            }
+            className={`mt-2 h-10 w-full rounded-md border px-3 text-sm outline-none placeholder:text-[#71717A] ${
+              hasSocialUrlError
+                ? "border-[#DC2626] focus:border-[#DC2626]"
+                : "border-[#E4E4E7] focus:border-[#18181B]"
+            }`}
+            placeholder="buymeacoffee.com/"
+          />
+          {hasSocialUrlError && (
+            <p id="socialUrl-error" className="mt-2 text-xs text-[#DC2626]">
+              Social account URL is required.
+            </p>
+          )}
 
-          <button className="mt-4 w-full rounded-md bg-[#D4D4D8] py-2 text-sm font-medium text-white">
+          <label htmlFor="message" className="mt-6 block text-sm font-medium">
+            Special message:
+          </label>
+          <textarea
+            id="message"
+            value={message}
+            onChange={(event) => setMessage(event.target.value)}
+            className="mt-2 h-29 w-full resize-none rounded-md border border-[#E4E4E7] p-3 text-sm outline-none placeholder:text-[#71717A] focus:border-[#18181B]"
+            placeholder="Please write your message here"
+          />
+
+          <button
+            type="button"
+            onClick={handleSupport}
+            disabled={!canSupport}
+            className={`mt-7 w-full rounded-md py-2.5 text-sm font-medium text-white transition-colors ${
+              canSupport
+                ? "bg-[#18181B] hover:bg-[#27272A]"
+                : "cursor-not-allowed bg-[#D4D4D8]"
+            }`}
+          >
             Support
           </button>
         </aside>
       </section>
-
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-110 rounded-md bg-white p-6 shadow-lg">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-base font-semibold">Edit profile</h2>
-                <p className="mt-1 text-xs leading-5 text-[#71717A]">
-                  Make changes to your profile here. Click save when you are
-                  done.
-                </p>
-              </div>
-
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="flex size-7 items-center justify-center rounded-md text-lg leading-none hover:bg-[#F4F4F5]"
-                aria-label="Close modal"
-              >
-                &times;
-              </button>
-            </div>
-
-            <div className="mt-5">
-              <div className="size-24 rounded-full bg-[url('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=160&auto=format&fit=crop')] bg-cover bg-center" />
-            </div>
-
-            <label className="mt-4 block text-xs font-medium">Name</label>
-            <input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              className="mt-2 w-full rounded-md border border-[#E4E4E7] p-2 text-sm outline-none focus:border-[#09090B]"
-              placeholder="Your name"
-            />
-
-            <label className="mt-4 block text-xs font-medium">About</label>
-            <textarea
-              value={about}
-              onChange={(event) => setAbout(event.target.value)}
-              className="mt-2 h-24 w-full resize-none rounded-md border border-[#E4E4E7] p-2 text-sm outline-none focus:border-[#09090B]"
-              placeholder="Tell supporters about yourself"
-            />
-
-            <label className="mt-4 block text-xs font-medium">
-              Social media URL
-            </label>
-            <input
-              value={socialUrl}
-              onChange={(event) => setSocialUrl(event.target.value)}
-              className="mt-2 w-full rounded-md border border-[#E4E4E7] p-2 text-sm outline-none focus:border-[#09090B]"
-              placeholder="https://example.com"
-            />
-
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="rounded-md border border-[#E4E4E7] px-4 py-2 text-sm font-medium hover:bg-[#F4F4F5]"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="rounded-md bg-[#09090B] px-4 py-2 text-sm font-medium text-white hover:bg-[#27272A]"
-              >
-                Save changes
-              </button>
-            </div>
-          </div>
-        </div>
+      {isProfileEditorOpen && (
+        <ProfileEditModal
+          profile={profile}
+          onClose={() => setIsProfileEditorOpen(false)}
+          onSave={(updatedProfile) => {
+            setProfile(updatedProfile);
+            setIsProfileEditorOpen(false);
+          }}
+        />
       )}
     </main>
   );
