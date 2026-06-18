@@ -43,7 +43,7 @@ export function DonationForm({
         value={supporterUrl}
         onChange={(e) => setSupporterUrl(e.target.value)}
         placeholder='buymeacoffee.com/'
-        className='w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm mb-4 outline-none focus:border-gray-400'
+        className='w-full border border-gray-200 text-black rounded-lg px-3 py-2.5 text-sm mb-4 outline-none focus:border-gray-400'
       />
       <label className='block text-sm text-gray-500 mb-1.5'>
         Special message:
@@ -53,7 +53,7 @@ export function DonationForm({
         onChange={(e) => setMessage(e.target.value)}
         placeholder='Please write your message here'
         rows={4}
-        className='w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm mb-5 outline-none focus:border-gray-400 resize-none'
+        className='w-full border text-black border-gray-200 rounded-lg px-3 py-2.5 text-sm mb-5 outline-none focus:border-gray-400 resize-none'
       />
       <button
         onClick={() => onSupport(selectedAmount, supporterUrl, message)}
