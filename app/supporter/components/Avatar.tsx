@@ -16,14 +16,14 @@ export function Avatar({
         alt={name}
         width={size}
         height={size}
-        className="rounded-full object-cover"
+        className='rounded-full object-cover'
         style={{ width: size, height: size }}
       />
     );
   }
   return (
     <div
-      className="rounded-full bg-emerald-500 flex items-center justify-center text-white font-medium flex-shrink-0"
+      className='rounded-full bg-emerald-500 flex items-center justify-center text-black font-medium flex-shrink-0'
       style={{ width: size, height: size, fontSize: size * 0.38 }}
     >
       {name.charAt(0).toUpperCase()}
