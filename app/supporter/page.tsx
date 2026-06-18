@@ -7,6 +7,7 @@ import { Avatar } from "./components/Avatar";
 import { RecentSupporters } from "./components/RecentSupporters";
 import { DonationForm } from "./components/DonationForm";
 import { QrModal } from "./components/Qrmodal";
+import { Navigation } from "./components/Navigation";
 
 export default function SupporterPage() {
   const creator = MOCK_CREATOR;
@@ -56,6 +57,7 @@ export default function SupporterPage() {
 
   return (
     <div className='min-h-screen bg-white'>
+      <Navigation />
       <div className='h-36 bg-emerald-400' />{" "}
       <div className='max-w-4xl mx-auto px-4 pb-12 -mt-16 grid grid-cols-1 md:grid-cols-[1fr_1.4fr] gap-5'>
         {" "}
