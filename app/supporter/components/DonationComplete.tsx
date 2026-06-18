@@ -1,5 +1,5 @@
 "use client";
-
+import { useRouter } from "next/navigation";
 import { Avatar } from "./Avatar";
 
 interface DonationCompleteProps {
@@ -8,14 +8,13 @@ interface DonationCompleteProps {
     avatarUrl?: string | null;
     successMessage?: string | null;
   };
-  onReturn: () => void;
 }
 
-export function DonationComplete({ creator, onReturn }: DonationCompleteProps) {
+export function DonationComplete({ creator }: DonationCompleteProps) {
   const message =
     creator.successMessage ??
     "Thank you for supporting me! It means a lot to have your support. It's a step toward creating a more inclusive and accepting community of artists.";
-
+  const router = useRouter();
   return (
     <div className='min-h-screen bg-white flex flex-col items-center justify-center gap-5 px-4'>
       <div className='w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center'>
@@ -50,7 +49,7 @@ export function DonationComplete({ creator, onReturn }: DonationCompleteProps) {
 
       <button
         type='button'
-        onClick={onReturn}
+        onClick={() => router.push("/explore")}
         className='bg-gray-900 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors'
       >
         Return to explore

@@ -51,12 +51,7 @@ export default function SupporterPage() {
   };
 
   if (done) {
-    return (
-      <DonationComplete
-        creator={creator}
-        onReturn={() => setDone(false)}
-      />
-    );
+    return <DonationComplete creator={creator} />;
   }
 
   return (
