@@ -1,35 +1,21 @@
 "use client";
 import { TextField } from "@/app/components/TextField";
-import Link from "next/link";
 import { useState } from "react";
 
-export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [emailErr, setEmailErr] = useState("");
-  const [passwordErr, setPasswordErr] = useState("");
+export default function Home() {
+  const [username, setUsername] = useState("");
+  const [usernameErr, setUsernameErr] = useState("");
 
-  const isEmailValid = (value: string) => {
-    if (value === "") return "Email cannot be empty...";
-    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value))
-      return "Please enter a valid email address.";
+  const isUsernameValid = (value: string) => {
+    if (value === "") return "Username cannot be empty.";
+    if (!/^[A-Za-z-]+$/.test(value))
+      return "Username cannot contain special characters or numbers.";
     return "";
   };
 
-  const isPasswordValid = (value: string) => {
-    if (value === "") return "Password cannot be empty";
-    return "";
-  };
-
-  const handleLoginSubmit = () => {
-    const emailValidationErr = isEmailValid(email);
-    const passwordValidationErr = isPasswordValid(password);
-
-    setEmailErr(emailValidationErr);
-    setPasswordErr(passwordValidationErr);
-
-    if (emailValidationErr === "" && passwordValidationErr === "") {
-    }
+  const handleContinue = () => {
+    const err = isUsernameValid(username);
+    setUsernameErr(err);
   };
 
   return (
@@ -126,62 +112,44 @@ export default function Login() {
 
       <div className="w-1/2 bg-white flex flex-col">
         <div className="flex justify-end px-6 py-5">
-          <Link href="/register">
-            <button className="text-sm text-[#374151] border border-[#D1D5DB] rounded-md px-4 py-1.5 hover:bg-gray-50 hover:font-bold transition-all duration-200">
-              Sign up
-            </button>
-          </Link>
+          <button className="text-sm text-[#374151] border border-[#D1D5DB] rounded-md px-4 py-1.5 hover:bg-gray-50 transition-colors">
+            Log in
+          </button>
         </div>
 
         <div className="flex-1 flex items-center justify-center px-8">
           <div className="w-full max-w-[320px]">
-            <h2 className="text-xl font-semibold text-[#111827] mb-6 text-left">
-              Welcome back
+            <h2 className="text-xl font-semibold text-[#111827] mb-1">
+              Create Your Account
             </h2>
+            <p className="text-sm text-[#6B7280] mb-6">
+              Choose a username for your page
+            </p>
 
             <div className="mb-3">
               <label className="block text-sm font-medium text-black mb-1.5">
-                Email
+                Username
               </label>
               <TextField
-                value={email}
+                value={username}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setEmail(value);
-                  setEmailErr(isEmailValid(value));
+                  setUsername(value);
+                  setUsernameErr(isUsernameValid(value));
                 }}
-                error={emailErr !== ""}
-                helperText={emailErr}
-                placeholder="Enter email here"
-                type="email"
+                error={usernameErr !== ""}
+                helperText={usernameErr}
+                placeholder="Username"
+                type="text"
               />
             </div>
 
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-black mb-1.5">
-                Password
-              </label>
-              <TextField
-                value={password}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setPassword(value);
-                  setPasswordErr(isPasswordValid(value));
-                }}
-                error={passwordErr !== ""}
-                helperText={passwordErr}
-                placeholder="Enter password here"
-                type="password"
-              />
-            </div>
-            <Link href="me">
-              <button
-                onClick={handleLoginSubmit}
-                className="w-full bg-[#E5E7EB] text-[#9CA3AF] text-sm font-medium rounded-md py-2.5 hover:font-bold transition-all duration-200"
-              >
-                Continue
-              </button>
-            </Link>
+            <button
+              onClick={handleContinue}
+              className="w-full bg-[#E5E7EB] text-[#9CA3AF] text-sm font-medium rounded-md py-2.5"
+            >
+              Continue
+            </button>
           </div>
         </div>
       </div>

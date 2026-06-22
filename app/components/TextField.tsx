@@ -27,7 +27,7 @@ export const TextField = (props: {
         </label>
       )}
       <input
-        className={`w-full h-11 rounded-lg border p-3 text-black placeholder-gray-400 outline-none transition-colors ${
+        className={`w-full h-11 rounded-lg border p-3 outline-none transition-colors ${
           error ? "border-[#E14942]" : "border-[#CBD5E1]"
         }`}
         value={value}
