@@ -1,0 +1,95 @@
+"use client";
+
+import { useState } from "react";
+import StepIndicator from "../components/Stepindicator";
+import ProfileStep from "../components/Profilestep";
+import PaymentStep from "../components/Payementstep";
+import SuccessStep from "../components/Successstep";
+
+export type ProfileData = {
+  photo: File | null;
+  name: string;
+  about: string;
+  socialUrl: string;
+};
+
+export type PaymentData = {
+  country: string;
+  firstName: string;
+  lastName: string;
+  cardNumber: string;
+  month: string;
+  year: string;
+  cvc: string;
+};
+
+const STEPS = ["Профайл", "Төлбөр", "Дуусгах"];
+
+export default function OnboardingPage() {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [profileData, setProfileData] = useState<ProfileData>({
+    photo: null,
+    name: "",
+    about: "",
+    socialUrl: "",
+  });
+  const [paymentData, setPaymentData] = useState<PaymentData>({
+    country: "",
+    firstName: "",
+    lastName: "",
+    cardNumber: "",
+    month: "",
+    year: "",
+    cvc: "",
+  });
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Nav */}
+      <nav className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2 font-medium text-gray-800">
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M9 12h.01M12 12h.01M15 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            />
+          </svg>
+          Buy Me Coffee
+        </div>
+        <button className="text-sm text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors">
+          Гарах
+        </button>
+      </nav>
+
+      <div className="max-w-lg mx-auto px-4 py-10">
+        <StepIndicator steps={STEPS} currentStep={currentStep} />
+
+        <div className="mt-8">
+          {currentStep === 1 && (
+            <ProfileStep
+              data={profileData}
+              onChange={setProfileData}
+              onNext={() => setCurrentStep(2)}
+            />
+          )}
+          {currentStep === 2 && (
+            <PaymentStep
+              data={paymentData}
+              onChange={setPaymentData}
+              onBack={() => setCurrentStep(1)}
+              onNext={() => setCurrentStep(3)}
+            />
+          )}
+          {currentStep === 3 && <SuccessStep />}
+        </div>
+      </div>
+    </div>
+  );
+}
