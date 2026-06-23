@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model BankCard {
+  id         Int      @id @default(autoincrement())
+  country    String
+  firstName  String
+  lastName   String
+  cardNumber String
+  expiryDate DateTime
+  userId     Int      @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
+  User       User     @relation(fields: [userId], references: [id])
+}
+
+model Donation {
+  id                              Int      @id @default(autoincrement())
+  amount                          Int
+  specialMessage                  String
+  socialURLOrBuyMeCoffee          String
+  donorId                         Int
+  recipientId                     Int
+  createdAt                       DateTime @default(now())
+  updatedAt                       DateTime
+  User_Donation_donorIdToUser     User     @relation("Donation_donorIdToUser", fields: [donorId], references: [id])
+  User_Donation_recipientIdToUser User     @relation("Donation_recipientIdToUser", fields: [recipientId], references: [id])
+}
+
+model Profile {
+  id              Int      @id @default(autoincrement())
+  name            String
+  about           String
+  avatarImage     String
+  socialMediaURL  String
+  backgroundImage String
+  successMessage  String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+  User            User?
+}
+
+model User {
+  id                                  Int        @id @default(autoincrement())
+  email                               String     @unique
+  password                            String
+  username                            String     @unique
+  profileId                           Int        @unique
+  createdAt                           DateTime   @default(now())
+  updatedAt                           DateTime
+  BankCard                            BankCard?
+  Donation_Donation_donorIdToUser     Donation[] @relation("Donation_donorIdToUser")
+  Donation_Donation_recipientIdToUser Donation[] @relation("Donation_recipientIdToUser")
+  Profile                             Profile    @relation(fields: [profileId], references: [id])
+}
