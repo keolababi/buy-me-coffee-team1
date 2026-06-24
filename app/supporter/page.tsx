@@ -6,15 +6,15 @@ import { DonationComplete } from "./components/DonationComplete";
 import { Avatar } from "./components/Avatar";
 import { RecentSupporters } from "./components/RecentSupporters";
 import { DonationForm } from "./components/DonationForm";
-import { QrModal } from "./components/Qrmodal";
 import { Navigation } from "./components/Navigation";
+import { PaymentDialog } from "./components/paymentdialog";
 
 export default function SupporterPage() {
   const creator = MOCK_CREATOR;
   const [supporters, setSupporters] = useState<Supporter[]>([]);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
-  const [showQR, setShowQR] = useState<{
+  const [pendingDonation, setPendingDonation] = useState<{
     url: string;
     amount: number;
     message: string;
@@ -25,14 +25,14 @@ export default function SupporterPage() {
     url: string,
     message: string,
   ) => {
-    setShowQR({ url, amount, message });
+    setPendingDonation({ url, amount, message });
   };
 
-  const handleQRConfirm = async () => {
-    if (!showQR) return;
-    const { url, amount, message } = showQR;
+  const handleDonationConfirm = async () => {
+    if (!pendingDonation) return;
+    const { url, amount, message } = pendingDonation;
 
-    setShowQR(null);
+    setPendingDonation(null);
     setLoading(true);
 
     await new Promise((r) => setTimeout(r, 600));
@@ -107,13 +107,14 @@ export default function SupporterPage() {
           onSupport={handleSupportTrigger}
         />{" "}
       </div>{" "}
-      {showQR && (
-        <QrModal
-          amount={showQR.amount}
-          onCancel={() => setShowQR(null)}
-          onConfirm={handleQRConfirm}
-        />
-      )}
+      <PaymentDialog
+        open={!!pendingDonation}
+        onClose={() => setPendingDonation(null)}
+        amount={pendingDonation?.amount}
+        targetUrl={pendingDonation?.url}
+        onSubmitCard={() => handleDonationConfirm()}
+        onConfirmQPay={handleDonationConfirm}
+      />
     </div>
   );
 }
