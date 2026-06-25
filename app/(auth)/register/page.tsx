@@ -3,10 +3,14 @@ import { TextField } from "@/app/components/TextField";
 import Link from "next/link";
 import { useState } from "react";
 
+import { useRouter } from "next/navigation";
 export default function Home() {
   const [step, setStep] = useState<"username" | "account" | "success">(
     "username",
   );
+  const router = useRouter();
+  const [apiErr, setApiErr] = useState("");
+  const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [usernameErr, setUsernameErr] = useState("");
   const [email, setEmail] = useState("");
@@ -47,15 +51,38 @@ export default function Home() {
     }
   };
 
-  const handleContinueAccount = () => {
+  const handleContinueAccount = async () => {
     const emailValidationErr = isEmailValid(email);
     const passwordValidationErr = isPasswordValid(password);
 
     setEmailErr(emailValidationErr);
     setPasswordErr(passwordValidationErr);
+    setApiErr("");
 
-    if (emailValidationErr === "" && passwordValidationErr === "") {
+    if (emailValidationErr !== "" || passwordValidationErr !== "") return;
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, username }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setApiErr(data.error || "Registration failed");
+        return;
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
       setStep("success");
+    } catch {
+      setApiErr("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -154,9 +181,11 @@ export default function Home() {
       <div className="w-1/2 bg-white flex flex-col">
         <div className="flex justify-end px-6 py-5">
           {step !== "success" && (
-            <button className="text-sm text-[#374151] border border-[#D1D5DB] rounded-md px-4 py-1.5 hover:bg-gray-50 hover:font-bold transition-all duration-200">
-              Log in
-            </button>
+            <Link href="/login">
+              <button className="text-sm text-[#374151] border border-[#D1D5DB] rounded-md px-4 py-1.5 hover:bg-gray-50 hover:font-bold transition-all duration-200">
+                Log in
+              </button>
+            </Link>
           )}
         </div>
 
@@ -191,9 +220,18 @@ export default function Home() {
 
                 <button
                   onClick={handleContinueUsername}
-                  className="w-full bg-[#E5E7EB] text-[#9CA3AF] text-sm font-medium rounded-md py-2.5 hover:font-bold transition-all duration-200"
+                  disabled={loading}
+                  className={`w-full text-sm font-medium rounded-md py-2.5 transition-all duration-200 flex justify-center items-center ${
+                    loading
+                      ? "bg-gray-300 cursor-not-allowed"
+                      : "bg-[#E5E7EB] text-[#9CA3AF] hover:font-bold"
+                  }`}
                 >
-                  Continue
+                  {loading ? (
+                    <div className="w-5 h-5 border-2 border-gray-400 border-t-gray-800 rounded-full animate-spin"></div>
+                  ) : (
+                    "Continue"
+                  )}
                 </button>
               </>
             )}
@@ -242,6 +280,11 @@ export default function Home() {
                     type="password"
                   />
                 </div>
+                {apiErr && (
+                  <p className="text-sm text-red-500 mb-4 text-center">
+                    {apiErr}
+                  </p>
+                )}
 
                 <button
                   onClick={handleContinueAccount}
