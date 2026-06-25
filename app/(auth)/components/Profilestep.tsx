@@ -27,10 +27,11 @@ export default function ProfileStep({ data, onChange, onNext }: Props) {
 
   function validate(): boolean {
     const next: Errors = {};
-    if (!data.photo) next.photo = "Зураг оруулна уу";
-    if (!data.name.trim()) next.name = "Нэр оруулна уу";
-    if (!data.about.trim()) next.about = "Танилцуулга оруулна уу";
-    if (!data.socialUrl.trim()) next.socialUrl = "Social URL оруулна уу";
+    if (!data.photo) next.photo = "Please add a photo";
+    if (!data.name.trim()) next.name = "Please enter your name";
+    if (!data.about.trim())
+      next.about = "Please write something about yourself";
+    if (!data.socialUrl.trim()) next.socialUrl = "Please enter a social link";
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -40,17 +41,18 @@ export default function ProfileStep({ data, onChange, onNext }: Props) {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-8">
-      <h1 className="text-xl font-medium text-gray-900 mb-1">Профайл бөглөх</h1>
-      <p className="text-sm text-gray-400 mb-6">Танилцуулгаа бэлтгэнэ үү</p>
+    <div>
+      <h1 className="text-2xl font-bold text-gray-900 mb-8">
+        Complete your profile page
+      </h1>
 
       {/* Photo upload */}
       <div className="mb-6">
-        <label className="block text-sm text-gray-500 mb-2">Зураг нэмэх</label>
+        <label className="block text-sm text-gray-700 mb-3">Add photo</label>
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          className={`w-[72px] h-[72px] rounded-full border-2 border-dashed flex items-center justify-center transition-colors overflow-hidden ${
+          className={`w-32 h-32 rounded-full border-2 border-dashed flex items-center justify-center transition-colors overflow-hidden ${
             errors.photo
               ? "border-red-400"
               : "border-gray-300 hover:border-gray-400"
@@ -63,7 +65,7 @@ export default function ProfileStep({ data, onChange, onNext }: Props) {
               className="w-full h-full object-cover"
             />
           ) : (
-            <Camera className="w-5 h-5 text-gray-400" />
+            <Camera className="w-7 h-7 text-gray-400" />
           )}
         </button>
         <input
@@ -79,8 +81,8 @@ export default function ProfileStep({ data, onChange, onNext }: Props) {
       </div>
 
       {/* Name */}
-      <div className="mb-4">
-        <label className="block text-sm text-gray-500 mb-1.5">Нэр</label>
+      <div className="mb-5">
+        <label className="block text-sm text-gray-700 mb-1.5">Name</label>
         <input
           type="text"
           value={data.name}
@@ -88,9 +90,9 @@ export default function ProfileStep({ data, onChange, onNext }: Props) {
             onChange({ ...data, name: e.target.value });
             if (errors.name) setErrors((p) => ({ ...p, name: undefined }));
           }}
-          placeholder="Нэрээ оруулна уу"
-          className={`w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition-colors focus:border-gray-400 ${
-            errors.name ? "border-red-400" : "border-gray-200"
+          placeholder="Enter your name here"
+          className={`w-full rounded-lg border px-4 py-2.5 text-sm outline-none transition-colors focus:border-gray-400 ${
+            errors.name ? "border-red-400" : "border-gray-300"
           }`}
         />
         {errors.name && (
@@ -99,20 +101,18 @@ export default function ProfileStep({ data, onChange, onNext }: Props) {
       </div>
 
       {/* About */}
-      <div className="mb-4">
-        <label className="block text-sm text-gray-500 mb-1.5">
-          Танилцуулга
-        </label>
+      <div className="mb-5">
+        <label className="block text-sm text-gray-700 mb-1.5">About</label>
         <textarea
           value={data.about}
           onChange={(e) => {
             onChange({ ...data, about: e.target.value });
             if (errors.about) setErrors((p) => ({ ...p, about: undefined }));
           }}
-          placeholder="Өөрийн тухай бичнэ үү"
-          rows={4}
-          className={`w-full rounded-xl border px-4 py-2.5 text-sm outline-none resize-none transition-colors focus:border-gray-400 ${
-            errors.about ? "border-red-400" : "border-gray-200"
+          placeholder="Write about yourself here"
+          rows={5}
+          className={`w-full rounded-lg border px-4 py-2.5 text-sm outline-none resize-none transition-colors focus:border-gray-400 ${
+            errors.about ? "border-red-400" : "border-gray-300"
           }`}
         />
         {errors.about && (
@@ -121,8 +121,8 @@ export default function ProfileStep({ data, onChange, onNext }: Props) {
       </div>
 
       {/* Social URL */}
-      <div className="mb-6">
-        <label className="block text-sm text-gray-500 mb-1.5">
+      <div className="mb-8">
+        <label className="block text-sm text-gray-700 mb-1.5">
           Social media URL
         </label>
         <input
@@ -134,8 +134,8 @@ export default function ProfileStep({ data, onChange, onNext }: Props) {
               setErrors((p) => ({ ...p, socialUrl: undefined }));
           }}
           placeholder="https://"
-          className={`w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition-colors focus:border-gray-400 ${
-            errors.socialUrl ? "border-red-400" : "border-gray-200"
+          className={`w-full rounded-lg border px-4 py-2.5 text-sm outline-none transition-colors focus:border-gray-400 ${
+            errors.socialUrl ? "border-red-400" : "border-gray-300"
           }`}
         />
         {errors.socialUrl && (
@@ -146,9 +146,9 @@ export default function ProfileStep({ data, onChange, onNext }: Props) {
       <div className="flex justify-end">
         <button
           onClick={handleNext}
-          className="bg-gray-900 text-white text-sm font-medium px-6 py-2.5 rounded-xl hover:bg-gray-700 transition-colors"
+          className="bg-gray-400 text-white text-sm w-[246px] font-medium px-8 py-3 rounded-lg hover:bg-gray-900 transition-colors"
         >
-          Үргэлжлүүлэх →
+          Continue
         </button>
       </div>
     </div>

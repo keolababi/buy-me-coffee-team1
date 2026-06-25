@@ -23,7 +23,7 @@ export type PaymentData = {
   cvc: string;
 };
 
-const STEPS = ["Профайл", "Төлбөр", "Дуусгах"];
+const STEPS = ["Profile", "Payment info", "Finish"];
 
 export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState(1);
