@@ -1,5 +1,5 @@
 import { CheckCircle } from "lucide-react";
-
+import Link from "next/link";
 export default function SuccessStep() {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">

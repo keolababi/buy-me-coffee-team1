@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import StepIndicator from "../components/Stepindicator";
 import ProfileStep from "../components/Profilestep";
 import PaymentStep from "../components/Payementstep";
@@ -25,7 +26,8 @@ export type PaymentData = {
 
 const STEPS = ["Profile", "Payment info", "Finish"];
 
-export default function OnboardingPage() {
+export default function MePage() {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [profileData, setProfileData] = useState<ProfileData>({
     photo: null,
@@ -43,9 +45,15 @@ export default function OnboardingPage() {
     cvc: "",
   });
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Nav */}
       <nav className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2 font-medium text-gray-800">
           <svg

@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 type Transaction = {
   id: number;
@@ -243,7 +245,13 @@ export default function HomeDashboardClient() {
   const [expandedTransactions, setExpandedTransactions] = useState<number[]>(
     [],
   );
-
+  const router = useRouter();
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+    }
+  }, []);
   const filteredTransactions = useMemo(
     () =>
       transactions.filter((transaction) =>
@@ -492,7 +500,6 @@ export default function HomeDashboardClient() {
               )}
             </div>
           </section>
-
         </section>
       </div>
     </main>

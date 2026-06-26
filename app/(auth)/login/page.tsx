@@ -1,13 +1,19 @@
 "use client";
 import { TextField } from "@/app/components/TextField";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import LoadingSpinner from "@/app/components/LoadingSpinner";
+
 export default function Login() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailErr, setEmailErr] = useState("");
   const [passwordErr, setPasswordErr] = useState("");
+  const [apiErr, setApiErr] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const isEmailValid = (value: string) => {
     if (value === "") return "Email cannot be empty...";
@@ -21,14 +27,42 @@ export default function Login() {
     return "";
   };
 
-  const handleLoginSubmit = () => {
+  const handleLoginSubmit = async () => {
     const emailValidationErr = isEmailValid(email);
     const passwordValidationErr = isPasswordValid(password);
 
     setEmailErr(emailValidationErr);
     setPasswordErr(passwordValidationErr);
+    setApiErr("");
 
-    if (emailValidationErr === "" && passwordValidationErr === "") {
+    if (emailValidationErr !== "" || passwordValidationErr !== "") return;
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setApiErr(data.error || "Login failed");
+        return;
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      router.push("/me");
+    } catch {
+      setApiErr("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+    if (loading) {
+      return <LoadingSpinner />;
     }
   };
 
@@ -174,14 +208,26 @@ export default function Login() {
                 type="password"
               />
             </div>
-            <Link href="me">
-              <button
-                onClick={handleLoginSubmit}
-                className="w-full bg-[#E5E7EB] text-[#9CA3AF] text-sm font-medium rounded-md py-2.5 hover:font-bold transition-all duration-200"
-              >
-                Continue
-              </button>
-            </Link>
+
+            {apiErr && (
+              <p className="text-sm text-red-500 mb-4 text-center">{apiErr}</p>
+            )}
+
+            <button
+              onClick={handleLoginSubmit}
+              disabled={loading}
+              className={`w-full text-sm font-medium rounded-md py-2.5 transition-all duration-200 flex justify-center items-center ${
+                loading
+                  ? "bg-gray-300 cursor-not-allowed"
+                  : "bg-[#E5E7EB] text-[#9CA3AF] hover:font-bold"
+              }`}
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-gray-400 border-t-gray-800 rounded-full animate-spin"></div>
+              ) : (
+                "Continue"
+              )}
+            </button>
           </div>
         </div>
       </div>
