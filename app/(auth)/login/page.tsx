@@ -4,8 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import LoadingSpinner from "@/app/components/LoadingSpinner";
-
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -62,7 +60,7 @@ export default function Login() {
       setLoading(false);
     }
     if (loading) {
-      return <LoadingSpinner />;
+      // return <LoadingSpinner />;
     }
   };
 
