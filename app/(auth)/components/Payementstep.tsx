@@ -12,10 +12,32 @@ type Props = {
 
 type Errors = Partial<Record<keyof PaymentData, string>>;
 
-const COUNTRIES = ["Монгол", "Япон", "АНУ", "Хятад", "Солонгос", "Их Британи"];
-const MONTHS = Array.from({ length: 12 }, (_, i) =>
-  String(i + 1).padStart(2, "0"),
-);
+const COUNTRIES = [
+  "Mongolia",
+  "United States",
+  "Japan",
+  "China",
+  "South Korea",
+  "United Kingdom",
+  "Germany",
+  "France",
+  "Australia",
+  "Canada",
+];
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 const YEARS = Array.from({ length: 10 }, (_, i) =>
   String(new Date().getFullYear() + i),
 );
@@ -24,7 +46,7 @@ function formatCard(value: string) {
   return value
     .replace(/\D/g, "")
     .slice(0, 16)
-    .replace(/(.{4})/g, "$1 ")
+    .replace(/(\d{4})(?=\d)/g, "$1-")
     .trim();
 }
 
@@ -38,14 +60,14 @@ export default function PaymentStep({ data, onChange, onBack, onNext }: Props) {
 
   function validate(): boolean {
     const next: Errors = {};
-    if (!data.country) next.country = "Улс сонгоно уу";
-    if (!data.firstName.trim()) next.firstName = "Овог оруулна уу";
-    if (!data.lastName.trim()) next.lastName = "Нэр оруулна уу";
-    if (data.cardNumber.replace(/\s/g, "").length < 16)
-      next.cardNumber = "Картын дугаар буруу";
-    if (!data.month) next.month = "Сар";
-    if (!data.year) next.year = "Он";
-    if (data.cvc.length < 3) next.cvc = "CVC буруу";
+    if (!data.country) next.country = "Please select a country";
+    if (!data.firstName.trim()) next.firstName = "Please enter your first name";
+    if (!data.lastName.trim()) next.lastName = "Please enter your last name";
+    if (data.cardNumber.replace(/-/g, "").length < 16)
+      next.cardNumber = "Please enter a valid card number";
+    if (!data.month) next.month = "Required";
+    if (!data.year) next.year = "Required";
+    if (data.cvc.length < 3) next.cvc = "Invalid CVC";
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -55,28 +77,30 @@ export default function PaymentStep({ data, onChange, onBack, onNext }: Props) {
   }
 
   const inputClass = (field: keyof PaymentData) =>
-    `w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition-colors focus:border-gray-400 ${
-      errors[field] ? "border-red-400" : "border-gray-200"
+    `w-full border px-4 py-2.5 text-sm outline-none transition-colors rounded-md focus:border-gray-400 bg-white ${
+      errors[field] ? "border-red-400" : "border-gray-300"
     }`;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-8">
-      <h1 className="text-xl font-medium text-gray-900 mb-1">
-        Хэрхэн төлбөр авах вэ?
+    <div>
+      <h1 className="text-2xl font-bold text-gray-900 mb-1">
+        How would you like to be paid?
       </h1>
-      <p className="text-sm text-gray-400 mb-6">
-        Байршил болон төлбөрийн мэдээллийг оруулна уу
+      <p className="text-sm text-gray-500 mb-8">
+        Enter location and payment details
       </p>
 
       {/* Country */}
-      <div className="mb-4">
-        <label className="block text-sm text-gray-500 mb-1.5">Улс сонгох</label>
+      <div className="mb-5">
+        <label className="block text-sm text-gray-700 mb-1.5">
+          Select country
+        </label>
         <select
           value={data.country}
           onChange={(e) => set("country", e.target.value)}
           className={inputClass("country")}
         >
-          <option value="">Сонгох</option>
+          <option value="">Select</option>
           {COUNTRIES.map((c) => (
             <option key={c} value={c}>
               {c}
@@ -89,14 +113,16 @@ export default function PaymentStep({ data, onChange, onBack, onNext }: Props) {
       </div>
 
       {/* Name row */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-2 gap-4 mb-5">
         <div>
-          <label className="block text-sm text-gray-500 mb-1.5">Овог</label>
+          <label className="block text-sm text-gray-700 mb-1.5">
+            First name
+          </label>
           <input
             type="text"
             value={data.firstName}
             onChange={(e) => set("firstName", e.target.value)}
-            placeholder="Овог"
+            placeholder="Enter your name here"
             className={inputClass("firstName")}
           />
           {errors.firstName && (
@@ -104,12 +130,14 @@ export default function PaymentStep({ data, onChange, onBack, onNext }: Props) {
           )}
         </div>
         <div>
-          <label className="block text-sm text-gray-500 mb-1.5">Нэр</label>
+          <label className="block text-sm text-gray-700 mb-1.5">
+            Last name
+          </label>
           <input
             type="text"
             value={data.lastName}
             onChange={(e) => set("lastName", e.target.value)}
-            placeholder="Нэр"
+            placeholder="Enter your name here"
             className={inputClass("lastName")}
           />
           {errors.lastName && (
@@ -119,15 +147,15 @@ export default function PaymentStep({ data, onChange, onBack, onNext }: Props) {
       </div>
 
       {/* Card number */}
-      <div className="mb-4">
-        <label className="block text-sm text-gray-500 mb-1.5">
-          Картын дугаар
+      <div className="mb-5">
+        <label className="block text-sm text-gray-700 mb-1.5">
+          Enter card number
         </label>
         <input
           type="text"
           value={data.cardNumber}
           onChange={(e) => set("cardNumber", formatCard(e.target.value))}
-          placeholder="XXXX XXXX XXXX XXXX"
+          placeholder="XXXX-XXXX-XXXX-XXXX"
           className={inputClass("cardNumber")}
         />
         {errors.cardNumber && (
@@ -136,15 +164,15 @@ export default function PaymentStep({ data, onChange, onBack, onNext }: Props) {
       </div>
 
       {/* Expires + CVC */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-3 gap-4 mb-8">
         <div>
-          <label className="block text-sm text-gray-500 mb-1.5">Сар</label>
+          <label className="block text-sm text-gray-700 mb-1.5">Expires</label>
           <select
             value={data.month}
             onChange={(e) => set("month", e.target.value)}
             className={inputClass("month")}
           >
-            <option value="">Сар</option>
+            <option value="">Month</option>
             {MONTHS.map((m) => (
               <option key={m} value={m}>
                 {m}
@@ -156,13 +184,13 @@ export default function PaymentStep({ data, onChange, onBack, onNext }: Props) {
           )}
         </div>
         <div>
-          <label className="block text-sm text-gray-500 mb-1.5">Он</label>
+          <label className="block text-sm text-gray-700 mb-1.5">Year</label>
           <select
             value={data.year}
             onChange={(e) => set("year", e.target.value)}
             className={inputClass("year")}
           >
-            <option value="">Он</option>
+            <option value="">Year</option>
             {YEARS.map((y) => (
               <option key={y} value={y}>
                 {y}
@@ -174,7 +202,7 @@ export default function PaymentStep({ data, onChange, onBack, onNext }: Props) {
           )}
         </div>
         <div>
-          <label className="block text-sm text-gray-500 mb-1.5">CVC</label>
+          <label className="block text-sm text-gray-700 mb-1.5">CVC</label>
           <input
             type="text"
             value={data.cvc}
@@ -190,18 +218,12 @@ export default function PaymentStep({ data, onChange, onBack, onNext }: Props) {
         </div>
       </div>
 
-      <div className="flex justify-between">
-        <button
-          onClick={onBack}
-          className="text-sm text-gray-500 border border-gray-200 px-5 py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
-        >
-          ← Буцах
-        </button>
+      <div className="flex justify-end">
         <button
           onClick={handleNext}
-          className="bg-gray-900 text-white text-sm font-medium px-6 py-2.5 rounded-xl hover:bg-gray-700 transition-colors"
+          className="bg-gray-400 text-white text-sm font-medium px-8 py-3 rounded-lg hover:bg-gray-900 transition-colors"
         >
-          Үргэлжлүүлэх →
+          Continue
         </button>
       </div>
     </div>
