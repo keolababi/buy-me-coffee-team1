@@ -1,5 +1,5 @@
 import { CheckCircle } from "lucide-react";
-
+import Link from "next/link";
 export default function SuccessStep() {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
@@ -8,12 +8,13 @@ export default function SuccessStep() {
           <CheckCircle className="w-8 h-8 text-teal-500" />
         </div>
       </div>
-      <h1 className="text-xl font-medium text-gray-900 mb-2">Бэлэн боллоо!</h1>
+      <h1 className="text-xl font-medium text-gray-900 mb-2">All Done!</h1>
       <p className="text-sm text-gray-400 mb-6">
-        Таны профайл амжилттай үүслээ. Одоо хандивлагчдаа хуваалцаарай.
+        Your profile has been successfully created. Now share it to get
+        donations!
       </p>
       <button className="w-full bg-gray-900 text-white text-sm font-medium py-3 rounded-xl hover:bg-gray-700 transition-colors">
-        Профайл харах
+        Continue
       </button>
     </div>
   );
