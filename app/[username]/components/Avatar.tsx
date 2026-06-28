@@ -9,21 +9,24 @@ export function Avatar({
   url: string | null;
   size?: number;
 }) {
-  if (url) {
+  if (url && url.trim() !== "") {
+    const isLocal = url.startsWith("/uploads/");
     return (
       <Image
         src={url}
         alt={name}
         width={size}
         height={size}
-        className='rounded-full object-cover'
+        className="rounded-full object-cover"
         style={{ width: size, height: size }}
+        unoptimized={isLocal}
       />
     );
   }
+
   return (
     <div
-      className='rounded-full bg-emerald-500 flex items-center justify-center text-black font-medium flex-shrink-0'
+      className="rounded-full bg-emerald-500 flex items-center justify-center text-black font-medium flex-shrink-0"
       style={{ width: size, height: size, fontSize: size * 0.38 }}
     >
       {name.charAt(0).toUpperCase()}

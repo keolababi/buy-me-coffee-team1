@@ -18,8 +18,8 @@ type Profile = {
   name: string;
   avatarImage: string;
   socialMediaURL: string;
+  username: string;
 };
-
 const amounts = [1, 2, 5, 10] as const;
 
 const transactions: Transaction[] = [
@@ -80,11 +80,15 @@ const transactions: Transaction[] = [
     time: "10 hours ago",
   },
 ];
-
 const navItems = [
   { label: "Home", active: true, href: "/home-dashboard" },
   { label: "Explore", active: false, href: "/explore" },
-  { label: "View page", active: false, external: true, href: "" },
+  {
+    label: "View page",
+    active: false,
+    external: true,
+    href: "/",
+  },
   { label: "Account settings", active: false, href: "/account" },
 ];
 

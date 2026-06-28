@@ -1,10 +1,22 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  allowedDevOrigins: ["192.168.1.117"],
+  images: {
+    remotePatterns: [
+      {
+        // matches any hostname, any port, any protocol
+        protocol: "http",
+        hostname: "**",
+        pathname: "/uploads/**",
+      },
+      {
+        protocol: "https",
+        hostname: "**",
+        pathname: "/uploads/**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;
-module.exports = {
-  allowedDevOrigins: ["192.168.1.117"],
-};
