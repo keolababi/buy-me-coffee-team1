@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
+import { NextRequest } from "next/server";
 import { cookies } from "next/headers";
+
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 export interface JWTPayload {
@@ -19,6 +21,7 @@ export function verifyToken(token: string): JWTPayload | null {
     return null;
   }
 }
+
 export function getUserIdFromRequest(req: NextRequest): number | null {
   const token =
     req.headers.get("authorization")?.replace("Bearer ", "") ||
@@ -28,4 +31,11 @@ export function getUserIdFromRequest(req: NextRequest): number | null {
 
   const payload = verifyToken(token);
   return payload?.userId ?? null;
+}
+
+export async function getSessionUser(): Promise<JWTPayload | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+  if (!token) return null;
+  return verifyToken(token);
 }

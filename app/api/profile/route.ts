@@ -29,8 +29,10 @@ export async function GET(req: NextRequest) {
         { status: 404 },
       );
     }
-
-    return NextResponse.json(user.Profile);
+    return NextResponse.json({
+      ...user.Profile,
+      username: user.username,
+    });
   } catch (error) {
     console.error("Profile GET error:", error);
     return NextResponse.json(
@@ -59,6 +61,7 @@ export async function PUT(req: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      select: { profileId: true },
     });
 
     if (!user) {
@@ -68,15 +71,16 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+    // Only update fields that were actually sent — prevents wiping existing values
     const updatedProfile = await prisma.profile.update({
       where: { id: user.profileId },
       data: {
-        name: name ?? "",
-        about: about ?? "",
-        avatarImage: avatarImage ?? "",
-        socialMediaURL: socialMediaURL ?? "",
-        backgroundImage: backgroundImage ?? "",
-        successMessage: successMessage ?? "",
+        ...(name !== undefined && { name }),
+        ...(about !== undefined && { about }),
+        ...(avatarImage !== undefined && { avatarImage }),
+        ...(socialMediaURL !== undefined && { socialMediaURL }),
+        ...(backgroundImage !== undefined && { backgroundImage }),
+        ...(successMessage !== undefined && { successMessage }),
         updatedAt: new Date(),
       },
     });
