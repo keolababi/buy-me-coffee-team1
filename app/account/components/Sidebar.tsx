@@ -1,11 +1,10 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Compass, ExternalLink, Settings } from "lucide-react";
 
 const NAV = [
-  { label: "Home", href: "/", icon: Home },
+  { label: "Home", href: "/home-dashboard", icon: Home },
   { label: "Explore", href: "/explore", icon: Compass },
   { label: "View page", href: "/profile", icon: ExternalLink, external: true },
   { label: "Account settings", href: "/account", icon: Settings },
@@ -13,7 +12,6 @@ const NAV = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-
   return (
     <aside className="w-44 shrink-0">
       <nav className="flex flex-col gap-1">

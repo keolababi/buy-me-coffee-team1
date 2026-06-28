@@ -15,6 +15,8 @@ type Errors = Partial<Record<keyof ProfileData, string>>;
 export default function ProfileStep({ data, onChange, onNext }: Props) {
   const [errors, setErrors] = useState<Errors>({});
   const [preview, setPreview] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
@@ -36,8 +38,44 @@ export default function ProfileStep({ data, onChange, onNext }: Props) {
     return Object.keys(next).length === 0;
   }
 
-  function handleNext() {
-    if (validate()) onNext();
+  async function handleNext() {
+    if (!validate()) return;
+
+    setLoading(true);
+    setServerError(null);
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: data.name,
+          about: data.about,
+          socialMediaURL: data.socialUrl,
+          avatarImage: preview ?? "",
+          backgroundImage: "",
+          successMessage: "",
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        setServerError(result.error || "Алдаа гарлаа");
+        return;
+      }
+
+      onNext();
+    } catch (err) {
+      setServerError("Серверт холбогдож чадсангүй");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -46,7 +84,6 @@ export default function ProfileStep({ data, onChange, onNext }: Props) {
         Complete your profile page
       </h1>
 
-      {/* Photo upload */}
       <div className="mb-6">
         <label className="block text-sm text-gray-700 mb-3">Add photo</label>
         <button
@@ -80,7 +117,6 @@ export default function ProfileStep({ data, onChange, onNext }: Props) {
         )}
       </div>
 
-      {/* Name */}
       <div className="mb-5">
         <label className="block text-sm text-gray-700 mb-1.5">Name</label>
         <input
@@ -100,7 +136,6 @@ export default function ProfileStep({ data, onChange, onNext }: Props) {
         )}
       </div>
 
-      {/* About */}
       <div className="mb-5">
         <label className="block text-sm text-gray-700 mb-1.5">About</label>
         <textarea
@@ -120,7 +155,6 @@ export default function ProfileStep({ data, onChange, onNext }: Props) {
         )}
       </div>
 
-      {/* Social URL */}
       <div className="mb-8">
         <label className="block text-sm text-gray-700 mb-1.5">
           Social media URL
@@ -143,12 +177,17 @@ export default function ProfileStep({ data, onChange, onNext }: Props) {
         )}
       </div>
 
+      {serverError && (
+        <p className="mb-4 text-sm text-red-500 text-center">{serverError}</p>
+      )}
+
       <div className="flex justify-end">
         <button
           onClick={handleNext}
-          className="bg-gray-400 text-white text-sm w-[246px] font-medium px-8 py-3 rounded-lg hover:bg-gray-900 transition-colors"
+          disabled={loading}
+          className="bg-gray-400 text-white text-sm w-[246px] font-medium px-8 py-3 rounded-lg hover:bg-gray-900 transition-colors disabled:opacity-50"
         >
-          Continue
+          {loading ? "Хадгалж байна..." : "Continue"}
         </button>
       </div>
     </div>

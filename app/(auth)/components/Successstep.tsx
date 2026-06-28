@@ -1,6 +1,10 @@
 import { CheckCircle } from "lucide-react";
-import Link from "next/link";
-export default function SuccessStep() {
+
+type Props = {
+  onFinish: () => void;
+};
+
+export default function SuccessStep({ onFinish }: Props) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
       <div className="flex justify-center mb-4">
@@ -13,7 +17,10 @@ export default function SuccessStep() {
         Your profile has been successfully created. Now share it to get
         donations!
       </p>
-      <button className="w-full bg-gray-900 text-white text-sm font-medium py-3 rounded-xl hover:bg-gray-700 transition-colors">
+      <button
+        onClick={onFinish}
+        className="w-full bg-gray-900 text-white text-sm font-medium py-3 rounded-xl hover:bg-gray-700 transition-colors"
+      >
         Continue
       </button>
     </div>
