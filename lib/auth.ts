@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-
+import { cookies } from "next/headers";
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 export interface JWTPayload {
@@ -18,4 +18,14 @@ export function verifyToken(token: string): JWTPayload | null {
   } catch {
     return null;
   }
+}
+export function getUserIdFromRequest(req: NextRequest): number | null {
+  const token =
+    req.headers.get("authorization")?.replace("Bearer ", "") ||
+    req.cookies.get("token")?.value;
+
+  if (!token) return null;
+
+  const payload = verifyToken(token);
+  return payload?.userId ?? null;
 }

@@ -95,7 +95,9 @@ export default function MePage() {
               onNext={() => setCurrentStep(3)}
             />
           )}
-          {currentStep === 3 && <SuccessStep />}
+          {currentStep === 3 && (
+            <SuccessStep onFinish={() => router.push("/home-dashboard")} />
+          )}
         </div>
       </div>
     </div>

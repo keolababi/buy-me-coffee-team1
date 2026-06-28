@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 type Creator = {
   id: number;
@@ -9,6 +10,12 @@ type Creator = {
   about: string;
   url: string;
   avatar: "space" | "purple" | "alien" | "teams" | "dragon";
+};
+
+type Profile = {
+  name: string;
+  avatarImage: string;
+  socialMediaURL: string;
 };
 
 const creators: Creator[] = [
@@ -34,8 +41,7 @@ const creators: Creator[] = [
     id: 3,
     name: "Alien Conspiracy",
     aboutTitle: "About Alien Conspiracy",
-    about:
-      "Show your support ♥ and buy me a coffee! & keep project a live!",
+    about: "Show your support and buy me a coffee! & keep project a live!",
     url: "https://buymeacoffee.com/roooaaaamm",
     avatar: "alien",
   },
@@ -44,7 +50,7 @@ const creators: Creator[] = [
     name: "Teams",
     aboutTitle: "About Teams",
     about:
-      "Joel 1:14 \"Sanctify a fast, call a solemn assembly, gather the elders and all the inhabitants of the land. Cry out to the LORD.\"My purpose is clear: To seek God's face, every Thursday for all my Subscribers to align with His will, and to step into th...",
+      "Joel 1:14 My purpose is clear: To seek God's face, every Thursday for all my Subscribers to align with His will...",
     url: "https://buymeacoffee.com/kaka0",
     avatar: "teams",
   },
@@ -59,10 +65,10 @@ const creators: Creator[] = [
 ];
 
 const navItems = [
-  { label: "Home", active: false },
-  { label: "Explore", active: true },
-  { label: "View page", active: false, external: true },
-  { label: "Account settings", active: false },
+  { label: "Home", active: false, href: "/home-dashboard" },
+  { label: "Explore", active: true, href: "/explore" },
+  { label: "View page", active: false, external: true, href: "#" },
+  { label: "Account settings", active: false, href: "/account" },
 ];
 
 function CoffeeIcon() {
@@ -171,7 +177,6 @@ function CreatorAvatar({ variant }: { variant: Creator["avatar"] }) {
     teams: "from-[#0369A1] via-[#0F766E] to-[#111827]",
     dragon: "from-[#FDE047] via-[#F97316] to-[#16A34A]",
   };
-
   return (
     <div
       className={`relative size-10 shrink-0 overflow-hidden rounded-full bg-gradient-to-br ${backgrounds[variant]}`}
@@ -184,33 +189,37 @@ function CreatorAvatar({ variant }: { variant: Creator["avatar"] }) {
   );
 }
 
-function UserAvatar() {
-  return (
-    <div className="relative size-11 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-[#031A2E] via-[#0F6B83] to-[#C9542A]">
-      <div className="absolute left-1/2 top-[20%] size-[34%] -translate-x-1/2 rounded-full bg-[#F9D5BC]" />
-      <div className="absolute bottom-[15%] left-1/2 h-[42%] w-[62%] -translate-x-1/2 rounded-t-full bg-[#312E81]" />
-      <div className="absolute left-[29%] top-[35%] size-[13%] rounded-full border border-[#111827] bg-[#93C5FD]" />
-      <div className="absolute right-[29%] top-[35%] size-[13%] rounded-full border border-[#111827] bg-[#93C5FD]" />
-    </div>
-  );
-}
-
 export default function ExploreClient() {
   const [search, setSearch] = useState("");
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+    fetch("/api/profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setProfile(data))
+      .catch(console.error);
+  }, []);
 
   const filteredCreators = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
-
-    if (!normalizedSearch) {
-      return creators;
-    }
-
+    if (!normalizedSearch) return creators;
     return creators.filter((creator) =>
       `${creator.name} ${creator.about} ${creator.url}`
         .toLowerCase()
         .includes(normalizedSearch),
     );
   }, [search]);
+
+  const displayName = profile?.name || "...";
 
   return (
     <main className="min-h-screen bg-white text-[#09090B]">
@@ -222,30 +231,71 @@ export default function ExploreClient() {
           </span>
         </div>
 
-        <button className="flex items-center gap-3 rounded-full px-2 py-1 text-sm font-medium text-[#09090B]">
-          <UserAvatar />
-          <span>Jake</span>
-          <ChevronDownIcon />
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            className="flex items-center gap-3 rounded-full px-2 py-1 text-sm font-medium text-[#09090B]"
+          >
+            {profile?.avatarImage ? (
+              <img
+                src={profile.avatarImage}
+                alt="avatar"
+                className="size-11 rounded-full object-cover shrink-0"
+              />
+            ) : (
+              <div className="relative size-11 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-[#031A2E] via-[#0F6B83] to-[#C9542A]">
+                <div className="absolute left-1/2 top-[20%] size-[34%] -translate-x-1/2 rounded-full bg-[#F9D5BC]" />
+                <div className="absolute bottom-[15%] left-1/2 h-[42%] w-[62%] -translate-x-1/2 rounded-t-full bg-[#312E81]" />
+                <div className="absolute left-[29%] top-[35%] size-[13%] rounded-full border border-[#111827] bg-[#93C5FD]" />
+                <div className="absolute right-[29%] top-[35%] size-[13%] rounded-full border border-[#111827] bg-[#93C5FD]" />
+              </div>
+            )}
+            <span>{displayName}</span>
+            <ChevronDownIcon />
+          </button>
+
+          {menuOpen && (
+            <div
+              role="menu"
+              className="absolute right-0 top-[calc(100%+8px)] z-20 w-36 rounded-md border border-[#E4E4E7] bg-white p-1 shadow-[0_8px_20px_rgba(0,0,0,0.12)]"
+            >
+              <a
+                href="/login"
+                role="menuitem"
+                className="block rounded-md px-3 py-2 text-sm font-medium leading-5 text-[#09090B] hover:bg-[#F4F4F5]"
+              >
+                Logout
+              </a>
+            </div>
+          )}
+        </div>
       </header>
 
       <div className="grid grid-cols-1 gap-8 px-5 pb-20 pt-[55px] md:grid-cols-[260px_minmax(0,1fr)] md:px-[7.25%] lg:gap-[86px]">
         <aside>
           <nav className="flex gap-2 overflow-x-auto md:block md:space-y-3 md:overflow-visible">
-            {navItems.map((item) => (
-              <a
-                key={item.label}
-                href="#"
-                className={`flex h-10 min-w-fit items-center gap-2 rounded-md px-4 text-sm transition-colors md:w-full ${
-                  item.active
-                    ? "bg-[#F4F4F5] text-[#09090B]"
-                    : "text-[#09090B] hover:bg-[#FAFAFA]"
-                }`}
-              >
-                <span>{item.label}</span>
-                {item.external && <ExternalLinkIcon />}
-              </a>
-            ))}
+            {navItems.map((item) => {
+              const href =
+                item.label === "View page"
+                  ? profile?.socialMediaURL || "#"
+                  : item.href;
+              return (
+                <a
+                  key={item.label}
+                  href={href}
+                  target={item.external ? "_blank" : undefined}
+                  rel={item.external ? "noopener noreferrer" : undefined}
+                  className={`flex h-10 min-w-fit items-center gap-2 rounded-md px-4 text-sm transition-colors md:w-full ${
+                    item.active
+                      ? "bg-[#F4F4F5] text-[#09090B]"
+                      : "text-[#09090B] hover:bg-[#FAFAFA]"
+                  }`}
+                >
+                  <span>{item.label}</span>
+                  {item.external && <ExternalLinkIcon />}
+                </a>
+              );
+            })}
           </nav>
         </aside>
 
@@ -258,7 +308,7 @@ export default function ExploreClient() {
             </span>
             <input
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Search name"
               className="h-10 w-full rounded-md border border-[#E4E4E7] bg-white pl-10 pr-3 text-sm text-[#09090B] outline-none placeholder:text-[#71717A] focus:border-[#A1A1AA]"
               type="search"
@@ -288,16 +338,16 @@ export default function ExploreClient() {
                         {creator.name}
                       </h2>
                     </div>
-
                     <a
                       href={creator.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="inline-flex h-9 shrink-0 items-center gap-2 rounded-md bg-[#F4F4F5] px-4 text-sm font-medium text-[#09090B] hover:bg-[#E4E4E7]"
                     >
                       View profile
                       <ExternalLinkIcon />
                     </a>
                   </div>
-
                   <div className="mt-5 grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(260px,0.95fr)] md:gap-[72px]">
                     <div>
                       <h3 className="text-base font-bold leading-6">
@@ -307,7 +357,6 @@ export default function ExploreClient() {
                         {creator.about}
                       </p>
                     </div>
-
                     <div>
                       <h3 className="text-base font-bold leading-6">
                         Social media URL

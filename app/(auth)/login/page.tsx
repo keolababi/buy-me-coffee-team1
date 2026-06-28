@@ -53,14 +53,22 @@ export default function Login() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      router.push("/me");
+      // Profile бөглөсөн эсэхийг шалгах
+      const profileRes = await fetch("/api/profile", {
+        headers: { Authorization: `Bearer ${data.token}` },
+      });
+      const profile = await profileRes.json();
+
+      // name хоосон бол profile бөглөөгүй гэж үзнэ
+      if (!profile?.name || profile.name.trim() === "") {
+        router.push("/me");
+      } else {
+        router.push("/home-dashboard");
+      }
     } catch {
       setApiErr("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
-    }
-    if (loading) {
-      // return <LoadingSpinner />;
     }
   };
 

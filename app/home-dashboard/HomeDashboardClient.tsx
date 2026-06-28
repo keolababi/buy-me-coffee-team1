@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 type Transaction = {
@@ -15,7 +14,12 @@ type Transaction = {
   time: string;
 };
 
-const publicUrl = "buymeacoffee.com/baconpancakes1";
+type Profile = {
+  name: string;
+  avatarImage: string;
+  socialMediaURL: string;
+};
+
 const amounts = [1, 2, 5, 10] as const;
 
 const transactions: Transaction[] = [
@@ -78,10 +82,10 @@ const transactions: Transaction[] = [
 ];
 
 const navItems = [
-  { label: "Home", active: true },
-  { label: "Explore", active: false },
-  { label: "View page", active: false, external: true },
-  { label: "Account settings", active: false },
+  { label: "Home", active: true, href: "/home-dashboard" },
+  { label: "Explore", active: false, href: "/explore" },
+  { label: "View page", active: false, external: true, href: "" },
+  { label: "Account settings", active: false, href: "/account" },
 ];
 
 function CoffeeIcon() {
@@ -196,16 +200,28 @@ function Avatar({
   size = "md",
   variant = "pink",
   initials,
+  src,
 }: {
   size?: "sm" | "md" | "lg";
   variant?: "pink" | "ocean";
   initials?: string;
+  src?: string;
 }) {
   const sizeClass = {
     sm: "size-10 text-sm",
     md: "size-12 text-base",
     lg: "size-14 text-lg",
   }[size];
+
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt="avatar"
+        className={`${sizeClass} shrink-0 rounded-full object-cover`}
+      />
+    );
+  }
 
   if (initials) {
     return (
@@ -221,7 +237,6 @@ function Avatar({
     variant === "ocean"
       ? "from-[#031A2E] via-[#0F6B83] to-[#C9542A]"
       : "from-[#F472B6] via-[#8B5CF6] to-[#F97316]";
-
   return (
     <div
       className={`${sizeClass} relative shrink-0 overflow-hidden rounded-full bg-gradient-to-br ${gradient}`}
@@ -245,18 +260,30 @@ export default function HomeDashboardClient() {
   const [expandedTransactions, setExpandedTransactions] = useState<number[]>(
     [],
   );
+  const [profile, setProfile] = useState<Profile | null>(null);
   const router = useRouter();
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
       router.push("/login");
+      return;
     }
+
+    // Profile татах
+    fetch("/api/profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setProfile(data))
+      .catch(console.error);
   }, []);
+
+  const publicUrl = profile?.socialMediaURL || "buymeacoffee.com/...";
+  const displayName = profile?.name || "...";
+
   const filteredTransactions = useMemo(
-    () =>
-      transactions.filter((transaction) =>
-        selectedAmounts.includes(transaction.amount),
-      ),
+    () => transactions.filter((t) => selectedAmounts.includes(t.amount)),
     [selectedAmounts],
   );
 
@@ -271,7 +298,7 @@ export default function HomeDashboardClient() {
   const toggleTransaction = (id: number) => {
     setExpandedTransactions((current) =>
       current.includes(id)
-        ? current.filter((transactionId) => transactionId !== id)
+        ? current.filter((tid) => tid !== id)
         : [...current, id],
     );
   };
@@ -303,8 +330,12 @@ export default function HomeDashboardClient() {
             aria-expanded={profileMenuOpen}
             aria-haspopup="menu"
           >
-            <Avatar size="sm" variant="ocean" />
-            <span>Jake</span>
+            <Avatar
+              size="sm"
+              src={profile?.avatarImage || undefined}
+              variant="ocean"
+            />
+            <span>{displayName}</span>
             <ChevronDownIcon />
           </button>
 
@@ -328,20 +359,24 @@ export default function HomeDashboardClient() {
       <div className="grid grid-cols-1 gap-8 px-5 pb-16 pt-12 md:grid-cols-[260px_minmax(0,1fr)] md:px-[7.2%] lg:gap-[72px]">
         <aside className="md:pt-[21px]">
           <nav className="flex gap-2 overflow-x-auto md:block md:space-y-3 md:overflow-visible">
-            {navItems.map((item) => (
-              <a
-                key={item.label}
-                href="#"
-                className={`flex h-10 min-w-fit items-center gap-2 rounded-md px-4 text-sm transition-colors md:w-full ${
-                  item.active
-                    ? "bg-[#F4F4F5] text-[#09090B]"
-                    : "text-[#09090B] hover:bg-[#FAFAFA]"
-                }`}
-              >
-                <span>{item.label}</span>
-                {item.external && <ExternalLinkIcon />}
-              </a>
-            ))}
+            {navItems.map((item) => {
+              const href =
+                item.label === "View page"
+                  ? profile?.socialMediaURL || "#"
+                  : item.href;
+              return (
+                <a
+                  key={item.label}
+                  href={href}
+                  target={item.external ? "_blank" : undefined}
+                  rel={item.external ? "noopener noreferrer" : undefined}
+                  className={`flex h-10 min-w-fit items-center gap-2 rounded-md px-4 text-sm transition-colors md:w-full ${item.active ? "bg-[#F4F4F5] text-[#09090B]" : "text-[#09090B] hover:bg-[#FAFAFA]"}`}
+                >
+                  <span>{item.label}</span>
+                  {item.external && <ExternalLinkIcon />}
+                </a>
+              );
+            })}
           </nav>
         </aside>
 
@@ -349,15 +384,20 @@ export default function HomeDashboardClient() {
           <section className="rounded-lg border border-[#E4E4E7] bg-white px-6 py-6 md:px-8">
             <div className="flex flex-col gap-5 border-b border-[#E4E4E7] pb-7 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
-                <Avatar size="lg" variant="pink" />
+                <Avatar
+                  size="lg"
+                  src={profile?.avatarImage || undefined}
+                  variant="pink"
+                />
                 <div>
-                  <h1 className="text-base font-bold leading-5">Jake</h1>
+                  <h1 className="text-base font-bold leading-5">
+                    {displayName}
+                  </h1>
                   <p className="mt-1 text-sm leading-5 text-[#18181B]">
                     {publicUrl}
                   </p>
                 </div>
               </div>
-
               <button
                 onClick={sharePage}
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#18181B] px-4 text-sm font-medium text-white transition hover:bg-[#27272A]"
@@ -373,7 +413,7 @@ export default function HomeDashboardClient() {
                 <label className="relative">
                   <select
                     value={period}
-                    onChange={(event) => setPeriod(event.target.value)}
+                    onChange={(e) => setPeriod(e.target.value)}
                     className="h-10 w-[183px] appearance-none rounded-md border border-[#E4E4E7] bg-white px-4 pr-10 text-sm text-[#09090B] outline-none"
                   >
                     <option>Last 30 days</option>
@@ -396,7 +436,6 @@ export default function HomeDashboardClient() {
               <h2 className="text-base font-bold leading-6">
                 Recent transactions
               </h2>
-
               <div className="relative">
                 <button
                   onClick={() => setAmountMenuOpen((open) => !open)}
@@ -405,7 +444,6 @@ export default function HomeDashboardClient() {
                   <ChevronDownIcon />
                   Amount
                 </button>
-
                 {amountMenuOpen && (
                   <div className="absolute right-0 z-10 mt-2 w-36 rounded-md border border-[#E4E4E7] bg-white p-2 shadow-lg">
                     {amounts.map((amount) => (
@@ -451,7 +489,6 @@ export default function HomeDashboardClient() {
                       canExpand && !isExpanded
                         ? `${transaction.message.slice(0, 214)}...`
                         : transaction.message;
-
                     return (
                       <article
                         key={transaction.id}
