@@ -1,6 +1,14 @@
 import { useState } from "react";
-import { Supporter } from "../../supporter/data";
 import { Avatar } from "./Avatar";
+
+type Supporter = {
+  id: string;
+  supporterName: string;
+  supporterAvatarUrl: string | null;
+  amount: number;
+  specialMessage: string | null;
+  createdAt: Date;
+};
 
 export function RecentSupporters({
   supporters,

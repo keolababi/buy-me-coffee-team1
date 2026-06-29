@@ -89,7 +89,7 @@ export function ProfileEditModal({
 
         {/* Avatar picker */}
         <div className="mb-5 flex items-center gap-4">
-          <div className="relative flex-shrink-0">
+          <div className="relative shsrink-0">
             {avatarPreview && avatarPreview.trim() !== "" ? (
               <Image
                 src={avatarPreview}

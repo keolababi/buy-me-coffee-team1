@@ -1,21 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth";
-
-function getUserId(req: NextRequest): number | null {
-  const token =
-    req.headers.get("authorization")?.replace("Bearer ", "") ||
-    req.cookies.get("token")?.value;
-  if (!token) return null;
-  const payload = verifyToken(token);
-  return payload?.userId ?? null;
-}
+import { getUserIdFromRequest } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   try {
-    const userId = getUserId(req);
+    const userId = getUserIdFromRequest(req);
     if (!userId) {
-      return NextResponse.json({ error: "Нэвтрээгүй байна" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
@@ -24,10 +15,7 @@ export async function GET(req: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "Хэрэглэгч олдсонгүй" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
     return NextResponse.json({
       ...user.Profile,
@@ -44,9 +32,9 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const userId = getUserId(req);
+    const userId = getUserIdFromRequest(req);
     if (!userId) {
-      return NextResponse.json({ error: "Нэвтрээгүй байна" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json();
@@ -65,13 +53,9 @@ export async function PUT(req: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "Хэрэглэгч олдсонгүй" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Only update fields that were actually sent — prevents wiping existing values
     const updatedProfile = await prisma.profile.update({
       where: { id: user.profileId },
       data: {
