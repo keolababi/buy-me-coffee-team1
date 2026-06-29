@@ -37,3 +37,8 @@ export type Profile = Prisma.ProfileModel
  * 
  */
 export type User = Prisma.UserModel
+/**
+ * Model Transaction
+ * 
+ */
+export type Transaction = Prisma.TransactionModel

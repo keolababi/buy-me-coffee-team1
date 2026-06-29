@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { CardDetails, CardForm } from "./Cardform";
 import { MethodTabs, PaymentMethod } from "./PaymentMethodTab";
@@ -11,9 +11,11 @@ interface PaymentDialogProps {
   onClose: () => void;
   onSubmitCard: (card: CardDetails) => void;
   onConfirmQPay?: () => void;
-  qrImageUrl?: string;
-  targetUrl?: string;
   amount?: number;
+  specialMessage?: string | null;
+  socialURLOrBuyMeCoffee?: string | null;
+  recipientId?: number;
+  donorId?: number;
 }
 
 export function PaymentDialog({
@@ -21,11 +23,82 @@ export function PaymentDialog({
   onClose,
   onSubmitCard,
   onConfirmQPay,
-  qrImageUrl,
-  targetUrl,
   amount,
+  specialMessage,
+  socialURLOrBuyMeCoffee,
+  recipientId,
+  donorId,
 }: PaymentDialogProps) {
   const [method, setMethod] = useState<PaymentMethod>("card");
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
+  const [transactionId, setTransactionId] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [paid, setPaid] = useState(false);
+
+  useEffect(() => {
+    if (!open || method !== "qpay" || !amount) return;
+
+    setGenerating(true);
+    setQrCodeUrl("");
+    setTransactionId(null);
+    setPaid(false);
+
+    fetch("/api/payment/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amount,
+        specialMessage,
+        socialURLOrBuyMeCoffee,
+        recipientId,
+        donorId: donorId || 2,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setQrCodeUrl(data.qrCodeUrl);
+        setTransactionId(data.transactionId);
+      })
+      .catch(console.error)
+      .finally(() => setGenerating(false));
+  }, [
+    open,
+    method,
+    amount,
+    specialMessage,
+    socialURLOrBuyMeCoffee,
+    recipientId,
+  ]);
+
+  useEffect(() => {
+    if (!transactionId || paid) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(
+          `/api/payment/status?transactionId=${transactionId}`,
+        );
+        const data = await res.json();
+        if (data.status === "COMPLETED") {
+          setPaid(true);
+          clearInterval(interval);
+          onConfirmQPay?.();
+        }
+      } catch {}
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [transactionId, paid, onConfirmQPay]);
+
+  // Reset when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setMethod("card");
+      setQrCodeUrl("");
+      setTransactionId(null);
+      setPaid(false);
+    }
+  }, [open]);
 
   if (!open) return null;
 
@@ -35,7 +108,7 @@ export function PaymentDialog({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-md rounded-2xl bg-white p-6"
+        className="relative w-full max-w-md rounded-2xl bg-white p-6 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -52,10 +125,9 @@ export function PaymentDialog({
           <CardForm onContinue={onSubmitCard} />
         ) : (
           <QPayPanel
-            qrImageUrl={qrImageUrl}
-            targetUrl={targetUrl}
+            qrCodeUrl={qrCodeUrl}
+            generating={generating}
             amount={amount}
-            onConfirm={onConfirmQPay}
           />
         )}
       </div>
