@@ -28,7 +28,7 @@ export function DonationForm({
 
       {disabled && (
         <p className="mb-4 rounded-md bg-gray-100 px-3 py-2 text-xs text-gray-500">
-          You can't support your own page.
+          You can&apos;t support your own page.
         </p>
       )}
 

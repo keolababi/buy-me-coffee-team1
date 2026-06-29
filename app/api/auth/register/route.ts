@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       username: user.username,
     });
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         token,
         user: {
@@ -74,6 +74,14 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 },
     );
+    response.cookies.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7,
+      path: "/",
+    });
+    return response;
   } catch (error) {
     console.error("Register error:", error);
     return NextResponse.json(
