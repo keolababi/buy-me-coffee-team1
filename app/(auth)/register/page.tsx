@@ -78,7 +78,7 @@ export default function Home() {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      setStep("success");
+      router.push("/me");
     } catch {
       setApiErr("Something went wrong. Please try again.");
     } finally {
@@ -172,8 +172,8 @@ export default function Home() {
             Fund your creative work
           </h1>
           <p className="text-sm text-[#78350F] text-center leading-relaxed max-w-[240px]">
-            Accept support. Start a membership. Setup a shop. It's easier than
-            you think.
+            Accept support. Start a membership. Setup a shop. It&apos;s easier
+            than you think.
           </p>
         </div>
       </div>
@@ -315,13 +315,10 @@ export default function Home() {
                   Welcome!
                 </h2>
                 <p className="text-sm text-[#6B7280] mb-6">
-                  your username is <strong>{username}</strong> BITCH{" "}
+                  your username is <strong>{username}</strong>{" "}
                 </p>
                 <Link href="/login" className="w-full">
-                  <button
-                    onClick={() => alert("ARAI tsashn hiigegv bnaa sdamin")}
-                    className="w-full bg-[#FBBF24] text-[#09090B] text-sm font-semibold rounded-md py-2.5 hover:bg-[#F59E0B] hover:font-bold transition-all duration-200"
-                  >
+                  <button className="w-full bg-[#FBBF24] text-[#09090B] text-sm font-semibold rounded-md py-2.5 hover:bg-[#F59E0B] hover:font-bold transition-all duration-200">
                     Continue
                   </button>
                 </Link>
