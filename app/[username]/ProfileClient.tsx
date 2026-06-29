@@ -235,7 +235,6 @@ export default function ProfileClient({
         open={!!pendingDonation}
         onClose={() => setPendingDonation(null)}
         amount={pendingDonation?.amount}
-        targetUrl={pendingDonation?.url}
         onSubmitCard={handleDonationConfirm}
         onConfirmQPay={handleDonationConfirm}
       />

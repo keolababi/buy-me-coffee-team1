@@ -50,8 +50,16 @@ function formatCard(value: string) {
     .trim();
 }
 
+// Convert month name to number string e.g. "January" -> "01"
+function monthToNumber(month: string): string {
+  const idx = MONTHS.indexOf(month);
+  return idx >= 0 ? String(idx + 1).padStart(2, "0") : "01";
+}
+
 export default function PaymentStep({ data, onChange, onBack, onNext }: Props) {
   const [errors, setErrors] = useState<Errors>({});
+  const [saving, setSaving] = useState(false);
+  const [serverError, setServerError] = useState("");
 
   function set(key: keyof PaymentData, value: string) {
     onChange({ ...data, [key]: value });
@@ -72,8 +80,47 @@ export default function PaymentStep({ data, onChange, onBack, onNext }: Props) {
     return Object.keys(next).length === 0;
   }
 
-  function handleNext() {
-    if (validate()) onNext();
+  async function handleNext() {
+    if (!validate()) return;
+
+    setSaving(true);
+    setServerError("");
+
+    try {
+      const token = localStorage.getItem("token");
+
+      // Build expiry date from month + year
+      const monthNum = monthToNumber(data.month);
+      const expiryDate = new Date(`${data.year}-${monthNum}-01`).toISOString();
+
+      const res = await fetch("/api/payment/card", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          country: data.country,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          cardNumber: data.cardNumber.replace(/-/g, ""),
+          expiryDate,
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Failed to save card");
+      }
+
+      onNext();
+    } catch (err) {
+      setServerError(
+        err instanceof Error ? err.message : "Failed to save card",
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   const inputClass = (field: keyof PaymentData) =>
@@ -218,12 +265,17 @@ export default function PaymentStep({ data, onChange, onBack, onNext }: Props) {
         </div>
       </div>
 
+      {serverError && (
+        <p className="mb-4 text-sm text-red-500">{serverError}</p>
+      )}
+
       <div className="flex justify-end">
         <button
           onClick={handleNext}
-          className="bg-gray-400 text-white text-sm font-medium px-8 py-3 rounded-lg hover:bg-gray-900 transition-colors"
+          disabled={saving}
+          className="bg-gray-400 text-white text-sm font-medium px-8 py-3 rounded-lg hover:bg-gray-900 transition-colors disabled:opacity-50"
         >
-          Continue
+          {saving ? "Saving…" : "Continue"}
         </button>
       </div>
     </div>

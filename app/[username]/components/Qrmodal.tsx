@@ -1,33 +1,12 @@
 import { QRCodeFrame } from "./QrCodeFrame";
 
 interface QPayPanelProps {
-  qrImageUrl?: string;
-  targetUrl?: string;
+  qrCodeUrl: string;
+  generating: boolean;
   amount?: number;
-
-  onConfirm?: () => void;
 }
 
-function toQrImageUrl(targetUrl: string) {
-  const normalized = targetUrl.startsWith("https://")
-    ? targetUrl
-    : targetUrl.startsWith("http://")
-      ? targetUrl.replace("http://", "https://")
-      : `https://${targetUrl}`;
-
-  return `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-    normalized,
-  )}`;
-}
-
-export function QPayPanel({
-  qrImageUrl,
-  targetUrl,
-  amount,
-  onConfirm,
-}: QPayPanelProps) {
-  const src = qrImageUrl ?? (targetUrl ? toQrImageUrl(targetUrl) : "");
-
+export function QPayPanel({ qrCodeUrl, generating, amount }: QPayPanelProps) {
   return (
     <div className="flex flex-col items-center py-2 text-center">
       <h2 className="mb-1.5 text-xl font-semibold text-black">Scan QR code</h2>
@@ -36,16 +15,22 @@ export function QPayPanel({
           ? `Scan the QR code to send $${amount}`
           : "Scan the QR code to complete your donation"}
       </p>
-      <QRCodeFrame src={src} alt="QPay QR code" />
 
-      {onConfirm && (
-        <button
-          onClick={onConfirm}
-          className="mt-6 w-full rounded-lg bg-gray-900 py-2.5 text-sm font-medium text-white hover:bg-gray-700"
-        >
-          I&apos;ve completed the payment
-        </button>
+      {generating ? (
+        <div className="flex h-56 w-56 items-center justify-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-gray-900" />
+        </div>
+      ) : qrCodeUrl ? (
+        <QRCodeFrame src={qrCodeUrl} alt="QPay QR code" />
+      ) : (
+        <div className="flex h-56 w-56 items-center justify-center text-sm text-gray-400">
+          Failed to generate QR
+        </div>
       )}
+
+      <p className="mt-4 text-xs text-gray-400">
+        Waiting for payment confirmation…
+      </p>
     </div>
   );
 }

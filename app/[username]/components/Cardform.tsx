@@ -1,4 +1,6 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useEffect } from "react";
 
 export interface CardDetails {
   name: string;
@@ -12,16 +14,15 @@ interface CardFormProps {
   onContinue: (card: CardDetails) => void;
 }
 
-const MONTHS = Array.from({ length: 12 }, (_, i) =>
-  String(i + 1).padStart(2, "0"),
-);
-const YEARS = Array.from({ length: 12 }, (_, i) =>
-  String(new Date().getFullYear() + i),
-);
-
 function formatCardNumber(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 16);
   return digits.match(/.{1,4}/g)?.join("/") ?? digits;
+}
+
+function maskCardNumber(value: string) {
+  const digits = value.replace(/\D/g, "");
+  const masked = "****" + "****" + "****" + digits.slice(-4);
+  return masked.match(/.{1,4}/g)?.join("/") ?? masked;
 }
 
 export function CardForm({ onContinue }: CardFormProps) {
@@ -30,6 +31,28 @@ export function CardForm({ onContinue }: CardFormProps) {
   const [expiryMonth, setExpiryMonth] = useState("");
   const [expiryYear, setExpiryYear] = useState("");
   const [cvc, setCvc] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [hasCard, setHasCard] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    fetch("/api/payment/card", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("No card");
+        return res.json();
+      })
+      .then((data) => {
+        setName(data.name);
+        setCardNumber(data.cardNumber);
+        setExpiryMonth(data.expiryMonth);
+        setExpiryYear(data.expiryYear);
+        setHasCard(true);
+      })
+      .catch(() => setHasCard(false))
+      .finally(() => setLoading(false));
+  }, []);
 
   const canContinue =
     name.trim().length > 1 &&
@@ -38,6 +61,14 @@ export function CardForm({ onContinue }: CardFormProps) {
     expiryYear.length > 0 &&
     cvc.length >= 3;
 
+  if (loading) {
+    return (
+      <div className="flex h-48 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-900" />
+      </div>
+    );
+  }
+
   return (
     <div>
       <label className="mb-1.5 block text-sm text-black">Name</label>
@@ -45,55 +76,64 @@ export function CardForm({ onContinue }: CardFormProps) {
         type="text"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        readOnly={hasCard}
         placeholder="First Last"
-        className="mb-4 w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-black outline-none focus:border-gray-400"
+        className={`mb-4 w-full rounded-lg border px-3 py-2.5 text-sm text-black outline-none ${
+          hasCard
+            ? "border-gray-100 bg-gray-50 text-gray-500 cursor-default"
+            : "border-gray-200 focus:border-gray-400"
+        }`}
       />
 
       <label className="mb-1.5 block text-sm text-black">Card number</label>
       <input
         type="text"
-        inputMode="numeric"
-        value={cardNumber}
-        onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+        value={
+          hasCard ? maskCardNumber(cardNumber) : formatCardNumber(cardNumber)
+        }
+        onChange={(e) =>
+          !hasCard && setCardNumber(formatCardNumber(e.target.value))
+        }
+        readOnly={hasCard}
         placeholder="XXXX/XXXX/XXXX/XXXX"
         maxLength={19}
-        className="mb-4 w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-black outline-none focus:border-gray-400"
+        className={`mb-4 w-full rounded-lg border px-3 py-2.5 text-sm text-black outline-none ${
+          hasCard
+            ? "border-gray-100 bg-gray-50 text-gray-500 cursor-default"
+            : "border-gray-200 focus:border-gray-400"
+        }`}
       />
 
       <div className="mb-6 grid grid-cols-3 gap-3">
         <div>
           <label className="mb-1.5 block text-sm text-black">Expires</label>
-          <select
+          <input
+            type="text"
             value={expiryMonth}
-            onChange={(e) => setExpiryMonth(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-black outline-none focus:border-gray-400"
-          >
-            <option value="" disabled>
-              Month
-            </option>
-            {MONTHS.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
+            onChange={(e) => !hasCard && setExpiryMonth(e.target.value)}
+            readOnly={hasCard}
+            placeholder="MM"
+            className={`w-full rounded-lg border px-3 py-2.5 text-sm text-black outline-none ${
+              hasCard
+                ? "border-gray-100 bg-gray-50 text-gray-500 cursor-default"
+                : "border-gray-200 focus:border-gray-400"
+            }`}
+          />
         </div>
         <div>
           <label className="mb-1.5 block text-sm text-black">Year</label>
-          <select
+          <input
+            type="text"
             value={expiryYear}
-            onChange={(e) => setExpiryYear(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-black outline-none focus:border-gray-400"
-          >
-            <option value="" disabled>
-              Year
-            </option>
-            {YEARS.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
+            onChange={(e) => !hasCard && setExpiryYear(e.target.value)}
+            readOnly={hasCard}
+            placeholder="YYYY"
+            className={`w-full rounded-lg border px-3 py-2.5 text-sm text-black outline-none ${
+              hasCard
+                ? "border-gray-100 bg-gray-50 text-gray-500 cursor-default"
+                : "border-gray-200 focus:border-gray-400"
+            }`}
+          />
         </div>
         <div>
           <label className="mb-1.5 block text-sm text-black">CVC</label>
@@ -109,6 +149,12 @@ export function CardForm({ onContinue }: CardFormProps) {
           />
         </div>
       </div>
+
+      {!hasCard && (
+        <p className="mb-4 text-xs text-gray-400">
+          No saved card found. Please enter your card details.
+        </p>
+      )}
 
       <div className="flex justify-end">
         <button
