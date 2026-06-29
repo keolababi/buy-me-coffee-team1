@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation"; // Added hook import
 
 type Status = "processing" | "success" | "error";
 
@@ -10,17 +11,31 @@ export default function PayPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const searchParams = useSearchParams();
   const [status, setStatus] = useState<Status>("processing");
 
   useEffect(() => {
     let cancelled = false;
+
+    const recipientId = searchParams.get("recipientId");
+    const specialMessage = searchParams.get("specialMessage");
+    const socialURLOrBuyMeCoffee = searchParams.get("socialURLOrBuyMeCoffee");
+    const donorId = searchParams.get("donorId");
 
     const completePayment = async () => {
       try {
         const res = await fetch("/api/payment/webhook", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ transactionId: id, paymentType: "QPAY" }),
+          // Updated: Passes along all parameters to the webhook
+          body: JSON.stringify({
+            transactionId: id,
+            paymentType: "QPAY",
+            recipientId: recipientId ? Number(recipientId) : null,
+            specialMessage: specialMessage || "",
+            socialURLOrBuyMeCoffee: socialURLOrBuyMeCoffee || "",
+            donorId: donorId ? Number(donorId) : 1,
+          }),
         });
         if (!res.ok) throw new Error("Webhook failed");
         if (!cancelled) setStatus("success");
@@ -33,7 +48,7 @@ export default function PayPage({
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, searchParams]); // Added searchParams to the dependency array
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white px-6 text-center">

@@ -12,6 +12,10 @@ interface PaymentDialogProps {
   onSubmitCard: (card: CardDetails) => void;
   onConfirmQPay?: () => void;
   amount?: number;
+  specialMessage?: string | null;
+  socialURLOrBuyMeCoffee?: string | null;
+  recipientId?: number;
+  donorId?: number;
 }
 
 export function PaymentDialog({
@@ -20,14 +24,17 @@ export function PaymentDialog({
   onSubmitCard,
   onConfirmQPay,
   amount,
+  specialMessage,
+  socialURLOrBuyMeCoffee,
+  recipientId,
+  donorId,
 }: PaymentDialogProps) {
   const [method, setMethod] = useState<PaymentMethod>("card");
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
-  const [transactionId, setTransactionId] = useState<number | null>(null);
+  const [transactionId, setTransactionId] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [paid, setPaid] = useState(false);
 
-  // Generate QR when QPay tab is selected
   useEffect(() => {
     if (!open || method !== "qpay" || !amount) return;
 
@@ -39,7 +46,13 @@ export function PaymentDialog({
     fetch("/api/payment/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount }),
+      body: JSON.stringify({
+        amount,
+        specialMessage,
+        socialURLOrBuyMeCoffee,
+        recipientId,
+        donorId: donorId || 2,
+      }),
     })
       .then((res) => res.json())
       .then((data) => {
@@ -48,9 +61,15 @@ export function PaymentDialog({
       })
       .catch(console.error)
       .finally(() => setGenerating(false));
-  }, [open, method, amount]);
+  }, [
+    open,
+    method,
+    amount,
+    specialMessage,
+    socialURLOrBuyMeCoffee,
+    recipientId,
+  ]);
 
-  // Poll transaction status after QR is shown
   useEffect(() => {
     if (!transactionId || paid) return;
 
@@ -65,10 +84,8 @@ export function PaymentDialog({
           clearInterval(interval);
           onConfirmQPay?.();
         }
-      } catch {
-        // keep polling
-      }
-    }, 2000); // check every 2 seconds
+      } catch {}
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [transactionId, paid, onConfirmQPay]);

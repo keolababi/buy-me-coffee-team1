@@ -24,13 +24,7 @@ type CreatorWithRelations = {
     socialMediaURL: string;
     backgroundImage: string;
   };
-  Donation_Donation_recipientIdToUser: {
-    id: number;
-    amount: number;
-    specialMessage: string;
-    socialURLOrBuyMeCoffee: string;
-    createdAt: Date;
-  }[];
+  Donation_Donation_recipientIdToUser: any[];
 };
 
 type Supporter = {
@@ -41,6 +35,12 @@ type Supporter = {
   specialMessage: string | null;
   createdAt: Date;
 };
+
+interface ProfileClientProps {
+  creator: CreatorWithRelations;
+  isOwner: boolean;
+  sessionUser: { userId: number } | null;
+}
 
 const getSupporterName = (url: string) => {
   try {
@@ -59,10 +59,8 @@ const getSupporterName = (url: string) => {
 export default function ProfileClient({
   creator,
   isOwner,
-}: {
-  creator: CreatorWithRelations;
-  isOwner: boolean;
-}) {
+  sessionUser,
+}: ProfileClientProps) {
   const [profile, setProfile] = useState<ProfileDetails>({
     name: creator.Profile.name,
     about: creator.Profile.about,
@@ -79,14 +77,27 @@ export default function ProfileClient({
   } | null>(null);
 
   const supporters: Supporter[] =
-    creator.Donation_Donation_recipientIdToUser.map((d) => ({
-      id: d.id.toString(),
-      supporterName: getSupporterName(d.socialURLOrBuyMeCoffee),
-      supporterAvatarUrl: null,
-      amount: d.amount,
-      specialMessage: d.specialMessage || null,
-      createdAt: d.createdAt,
-    }));
+    creator.Donation_Donation_recipientIdToUser.map((d) => {
+      const donorUser = d.User_Donation_donorIdToUser;
+      const donorProfile = donorUser?.Profile;
+
+      const resolvedName =
+        donorProfile?.name ||
+        donorUser?.username ||
+        getSupporterName(d.socialURLOrBuyMeCoffee);
+
+      return {
+        id: d.id.toString(),
+        supporterName: resolvedName,
+        supporterAvatarUrl:
+          donorProfile?.avatarImage && donorProfile.avatarImage.trim() !== ""
+            ? donorProfile.avatarImage
+            : null,
+        amount: d.amount,
+        specialMessage: d.specialMessage || null,
+        createdAt: d.createdAt,
+      };
+    });
 
   const handleSupportTrigger = (
     amount: number,
@@ -96,16 +107,55 @@ export default function ProfileClient({
     setPendingDonation({ url, amount, message });
   };
 
+  // Process Card Payments and automatically invoke local mock database hooks
   const handleDonationConfirm = async () => {
     if (!pendingDonation) return;
-    setPendingDonation(null);
     setLoading(true);
 
-    // TODO: replace with real POST /api/donation/create-donation
-    await new Promise((r) => setTimeout(r, 600));
+    try {
+      // 1. Create base payment tracking reference object
+      const response = await fetch("/api/payment/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: pendingDonation.amount,
+          specialMessage: pendingDonation.message,
+          socialURLOrBuyMeCoffee: pendingDonation.url,
+          recipientId: creator.id,
+          donorId: sessionUser?.userId || 1,
+          paymentType: "CARD",
+        }),
+      });
 
-    setLoading(false);
-    setDone(true);
+      if (!response.ok) throw new Error("Payment initialization failed");
+      const data = await response.json();
+
+      // 2. Direct inline webhook executor processing mock confirmations automatically
+      const webhookRes = await fetch("/api/payment/webhook", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          transactionId: data.transactionId,
+          paymentType: "CARD",
+          recipientId: creator.id,
+          specialMessage: pendingDonation.message,
+          socialURLOrBuyMeCoffee: pendingDonation.url,
+          donorId: sessionUser?.userId || 1,
+        }),
+      });
+
+      if (webhookRes.ok) {
+        setPendingDonation(null);
+        setDone(true);
+      } else {
+        alert("Failed to record card payment parameters.");
+      }
+    } catch (error) {
+      console.error("Card processing pipeline exception:", error);
+      alert("Something went wrong handling the payment authorization.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (done) {
@@ -133,7 +183,6 @@ export default function ProfileClient({
           </Link>
         </div>
       </header>
-
       {isOwner ? (
         <CoverImageUploader initialCoverUrl={creator.Profile.backgroundImage} />
       ) : (
@@ -146,7 +195,6 @@ export default function ProfileClient({
           }
         />
       )}
-
       <section className="relative z-10 mx-auto -mt-20 grid max-w-270 grid-cols-1 gap-6 px-6 pb-16 lg:grid-cols-[1fr_520px]">
         <div className="space-y-6">
           <section className="rounded-md border border-[#E4E4E7] bg-white p-6 shadow-sm">
@@ -191,7 +239,6 @@ export default function ProfileClient({
           onSupport={handleSupportTrigger}
         />
       </section>
-
       {isOwner && isProfileEditorOpen && (
         <ProfileEditModal
           profile={profile}
@@ -206,7 +253,6 @@ export default function ProfileClient({
                   about: updatedProfile.about,
                   socialMediaURL: updatedProfile.socialUrl,
                   avatarImage: updatedProfile.avatarUrl,
-                  // preserve existing values — not overwritten
                   backgroundImage: creator.Profile.backgroundImage,
                 }),
               });
@@ -235,6 +281,10 @@ export default function ProfileClient({
         open={!!pendingDonation}
         onClose={() => setPendingDonation(null)}
         amount={pendingDonation?.amount}
+        specialMessage={pendingDonation?.message}
+        socialURLOrBuyMeCoffee={pendingDonation?.url}
+        recipientId={creator.id}
+        donorId={sessionUser?.userId}
         onSubmitCard={handleDonationConfirm}
         onConfirmQPay={handleDonationConfirm}
       />

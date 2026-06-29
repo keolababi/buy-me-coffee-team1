@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Avatar } from "./Avatar";
-
-type Supporter = {
+export type Supporter = {
   id: string;
   supporterName: string;
   supporterAvatarUrl: string | null;
