@@ -274,7 +274,6 @@ export default function HomeDashboardClient() {
       return;
     }
 
-    // Profile татах
     fetch("/api/profile", {
       headers: { Authorization: `Bearer ${token}` },
     })

@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   try {
     const userId = getUserId(req);
     if (!userId) {
-      return NextResponse.json({ error: "Нэвтрээгүй байна" }, { status: 401 });
+      return NextResponse.json({ error: "Log  the fuck in" }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
@@ -24,10 +24,7 @@ export async function GET(req: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "Хэрэглэгч олдсонгүй" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Cant find shit" }, { status: 404 });
     }
     return NextResponse.json({
       ...user.Profile,
@@ -46,7 +43,7 @@ export async function PUT(req: NextRequest) {
   try {
     const userId = getUserId(req);
     if (!userId) {
-      return NextResponse.json({ error: "Нэвтрээгүй байна" }, { status: 401 });
+      return NextResponse.json({ error: "Log  the fuck in" }, { status: 401 });
     }
 
     const body = await req.json();
@@ -65,13 +62,9 @@ export async function PUT(req: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "Хэрэглэгч олдсонгүй" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Log  the fuck in" }, { status: 404 });
     }
 
-    // Only update fields that were actually sent — prevents wiping existing values
     const updatedProfile = await prisma.profile.update({
       where: { id: user.profileId },
       data: {
