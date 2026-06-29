@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Link } from "lucide-react";
 
 type Creator = {
   id: number;
@@ -259,13 +260,13 @@ export default function ExploreClient() {
               role="menu"
               className="absolute right-0 top-[calc(100%+8px)] z-20 w-36 rounded-md border border-[#E4E4E7] bg-white p-1 shadow-[0_8px_20px_rgba(0,0,0,0.12)]"
             >
-              <a
+              <Link
                 href="/login"
                 role="menuitem"
                 className="block rounded-md px-3 py-2 text-sm font-medium leading-5 text-[#09090B] hover:bg-[#F4F4F5]"
               >
                 Logout
-              </a>
+              </Link>
             </div>
           )}
         </div>
