@@ -107,13 +107,11 @@ export default function ProfileClient({
     setPendingDonation({ url, amount, message });
   };
 
-  // Process Card Payments and automatically invoke local mock database hooks
   const handleDonationConfirm = async () => {
     if (!pendingDonation) return;
     setLoading(true);
 
     try {
-      // 1. Create base payment tracking reference object
       const response = await fetch("/api/payment/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -130,7 +128,6 @@ export default function ProfileClient({
       if (!response.ok) throw new Error("Payment initialization failed");
       const data = await response.json();
 
-      // 2. Direct inline webhook executor processing mock confirmations automatically
       const webhookRes = await fetch("/api/payment/webhook", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
